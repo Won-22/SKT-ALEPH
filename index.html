@@ -349,7 +349,12 @@
     padding:32px 0 44px;
     border-top:1px solid var(--border);
   }
-  footer.site p{
+  .footer-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:16px;
+    flex-wrap:wrap;
     font-size:0.85rem;
     color:var(--ink-soft);
   }
@@ -532,7 +537,10 @@
   </main>
 
   <footer class="site wrap">
-    <p>이 페이지는 제가 공개하기로 정한 정보만 담았습니다. 최종 업데이트: <span>[날짜]</span></p>
+    <div class="footer-row">
+      <span>본 페이지는 공개 가능한 정보만을 취급하고 있습니다.</span>
+      <span>최종 업데이트: 26.09.10</span>
+    </div>
   </footer>
 
   <script>
