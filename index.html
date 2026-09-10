@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>[전원] — 소개 페이지</title>
+<meta name="description" content="[타인이 나를 보는 README.txt]" />
+<style>
+  :root{
+    --bg:#F5F9FF;
+    --surface:#FFFFFF;
+    --surface-alt:#E8F1FF;
+    --ink:#1A2233;
+    --ink-soft:#556074;
+    --accent:#1E5AD6;
+    --accent-dark:#163C99;
+    --accent-ink:#FFFFFF;
+    --dot-public:#1E9E6B;
+    --dot-private:#8B93A3;
+    --border:#DCE6F7;
+    --radius:20px;
+    --maxw:1080px;
+    font-family:-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  }
+
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  img{ max-width:100%; display:block; }
+
+  h1,h2,h3{ font-weight:800; letter-spacing:-0.01em; margin:0; }
+  p{ margin:0; }
+  a{ color:var(--accent); text-underline-offset:3px; }
+  a:not(.btn):not(.tile){ text-decoration-thickness:1.5px; }
+
+  :focus-visible{
+    outline:3px solid var(--accent);
+    outline-offset:3px;
+    border-radius:4px;
+  }
+
+  .skip-link{
+    position:absolute;
+    left:12px; top:-60px;
+    background:var(--ink);
+    color:#fff;
+    padding:10px 16px;
+    border-radius:8px;
+    z-index:100;
+    transition:top .15s ease;
+  }
+  .skip-link:focus{ top:12px; }
+
+  .wrap{
+    max-width:var(--maxw);
+    margin:0 auto;
+    padding-left:28px;
+    padding-right:28px;
+  }
+
+  header.site{
+    position:sticky; top:0; z-index:10;
+    background:rgba(246,241,233,0.9);
+    backdrop-filter:saturate(140%) blur(6px);
+    border-bottom:2px solid var(--ink);
+  }
+  .site-inner{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 28px;
+    max-width:var(--maxw); margin:0 auto;
+    gap:16px;
+  }
+  .wordmark{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:1.05rem;
+    font-weight:800;
+    color:var(--ink);
+    text-decoration:none;
+  }
+  .wordmark .dot{
+    width:9px; height:9px; border-radius:50%;
+    background:var(--accent);
+    display:inline-block;
+  }
+  nav.site-nav ul{
+    list-style:none; display:flex; gap:26px; margin:0; padding:0;
+  }
+  nav.site-nav a{
+    position:relative;
+    color:var(--ink-soft);
+    text-decoration:none;
+    font-weight:700;
+    font-size:0.92rem;
+    padding-bottom:2px;
+    border-bottom:2px solid transparent;
+  }
+  nav.site-nav a:hover{ color:var(--accent); border-bottom-color:var(--accent); }
+
+  .hero{ padding:40px 0; }
+  .hero-grid{
+    display:grid;
+    grid-template-columns:1.15fr 0.85fr;
+    gap:36px;
+    align-items:start;
+  }
+  .hero-kicker{
+    display:inline-block;
+    font-size:0.8rem;
+    font-weight:700;
+    color:var(--accent-dark);
+    background:var(--surface-alt);
+    border:1px solid var(--border);
+    padding:6px 14px;
+    border-radius:999px;
+    margin-bottom:14px;
+  }
+  .hero h1{
+    font-size:clamp(1.7rem, 3.4vw, 2.5rem);
+    line-height:1.22;
+    max-width:18ch;
+  }
+  .hero-sub{
+    margin-top:12px;
+    font-size:1.02rem;
+    color:var(--ink-soft);
+    max-width:52ch;
+  }
+  .hero-actions{
+    margin-top:20px;
+    display:flex; gap:12px; flex-wrap:wrap;
+  }
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:12px 22px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:0.95rem;
+    text-decoration:none;
+    border:2px solid transparent;
+  }
+  .btn-solid{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  .btn-solid:hover{ background:var(--accent-dark); border-color:var(--accent-dark); }
+  .btn-line{ border-color:var(--ink); color:var(--ink); }
+  .btn-line:hover{ background:var(--ink); color:#fff; }
+
+  .scope-panel{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .scope-head{
+    padding:10px 20px;
+    font-size:0.8rem;
+    font-weight:700;
+    color:var(--ink-soft);
+    border-bottom:1px solid var(--border);
+  }
+  .scope-cols{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+  .scope-col{ padding:14px 20px; }
+  .scope-col + .scope-col{ border-left:1px solid var(--border); }
+  .scope-col-title{
+    font-size:0.78rem;
+    font-weight:700;
+    color:var(--ink);
+    margin-bottom:12px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .scope-col-title .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .scope-col-title .dot.public{ background:var(--dot-public); }
+  .scope-col-title .dot.private{ background:var(--dot-private); }
+  .scope-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .scope-list li{
+    font-size:0.92rem;
+    color:var(--ink);
+    padding-left:16px;
+    position:relative;
+  }
+  .scope-list li::before{
+    content:"";
+    position:absolute; left:0; top:0.55em;
+    width:6px; height:6px; border-radius:50%;
+    background:var(--border);
+  }
+
+  section.block{ padding:40px 0; }
+  section.block + section.block{ border-top:1px solid var(--border); }
+  .block-head{ margin-bottom:20px; }
+  .block h2{
+    font-size:clamp(1.35rem, 2.4vw, 1.7rem);
+    margin-bottom:8px;
+  }
+  .block-lede{
+    color:var(--ink-soft);
+    max-width:56ch;
+  }
+
+  .strength-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:18px;
+  }
+  .strength-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:24px;
+    display:flex;
+    flex-direction:column;
+  }
+  .strength-index{
+    font-size:0.8rem;
+    font-weight:800;
+    color:var(--accent);
+    letter-spacing:0.04em;
+    margin-bottom:10px;
+  }
+  .strength-card h3{
+    font-size:1.15rem;
+    margin-bottom:16px;
+  }
+  .sar{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    padding-top:16px;
+    border-top:1px solid var(--border);
+    margin-top:auto;
+  }
+  .sar-row{ display:flex; gap:10px; font-size:0.9rem; }
+  .sar-label{
+    flex:0 0 auto;
+    font-weight:700;
+    color:var(--ink-soft);
+    min-width:3.2em;
+  }
+  .sar-value{ color:var(--ink); }
+
+  .toggle-btn{
+    margin-top:18px;
+    align-self:flex-start;
+    background:none;
+    border:1px solid var(--border);
+    color:var(--ink);
+    font-weight:700;
+    font-size:0.86rem;
+    padding:9px 16px;
+    border-radius:999px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+  .toggle-btn:hover{ border-color:var(--accent); color:var(--accent); }
+  .toggle-btn .arrow{ transition:transform .18s ease; }
+  .toggle-btn[aria-expanded="true"] .arrow{ transform:rotate(180deg); }
+
+  .detail-wrap{
+    display:grid;
+    grid-template-rows:0fr;
+    visibility:hidden;
+    transition:grid-template-rows .22s ease;
+  }
+  .detail-wrap.open{ grid-template-rows:1fr; visibility:visible; }
+  .detail-inner{ overflow:hidden; }
+  .detail-body{
+    padding-top:14px;
+    font-size:0.9rem;
+    color:var(--ink-soft);
+  }
+  .detail-body a{ font-weight:700; }
+
+  @media (prefers-reduced-motion: reduce){
+    .detail-wrap, .toggle-btn .arrow, .skip-link{ transition:none !important; }
+  }
+
+  .connect-strip{
+    display:flex; flex-wrap:wrap; gap:14px;
+  }
+  .tile{
+    flex:1 1 220px;
+    display:flex; align-items:center; gap:14px;
+    padding:16px 18px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    text-decoration:none;
+    color:var(--ink);
+  }
+  .tile:hover{ border-color:var(--accent); }
+  .tile-badge{
+    flex:0 0 auto;
+    width:40px; height:40px;
+    border-radius:50%;
+    background:var(--surface-alt);
+    color:var(--accent-dark);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800;
+    font-size:0.82rem;
+  }
+  .tile-text{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .tile-text strong{ font-size:0.95rem; }
+  .tile-text span{
+    font-weight:500;
+    color:var(--ink-soft);
+    font-size:0.8rem;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  footer.site{
+    padding:32px 0 44px;
+    border-top:1px solid var(--border);
+  }
+  footer.site p{
+    font-size:0.85rem;
+    color:var(--ink-soft);
+  }
+
+  @media (max-width:900px){
+    .hero-grid{ grid-template-columns:1fr; }
+    .strength-grid{ grid-template-columns:1fr; }
+    .scope-cols{ grid-template-columns:1fr; }
+    .scope-col + .scope-col{ border-left:none; border-top:1px solid var(--border); }
+    nav.site-nav ul{ gap:16px; }
+  }
+  @media (max-width:520px){
+    .site-inner{ padding:14px 18px; }
+    .wrap{ padding-left:18px; padding-right:18px; }
+    .sar-row{ flex-direction:column; gap:2px; }
+  }
+</style>
+</head>
+<body>
+  <a class="skip-link" href="#main">본문 바로가기</a>
+
+  <header class="site">
+    <div class="site-inner">
+      <a class="wordmark" href="#main"><span class="dot" aria-hidden="true"></span>전원</a>
+      <nav class="site-nav" aria-label="주요 메뉴">
+        <ul>
+          <li><a href="#intro">소개</a></li>
+          <li><a href="#strengths">강점</a></li>
+          <li><a href="#connect">연결</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="intro" class="hero wrap">
+      <div class="hero-grid">
+        <div>
+          <span class="hero-kicker">채용·협업 담당자님께</span>
+          <h1>타인이 나를 보는 ReadMe.TXT</h1>
+          <p class="hero-sub">
+            이 페이지는 저와의 채용·협업을 검토하시는 분께 제 강점과 활동 근거를 보여드리기 위해 만들었습니다.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-solid" href="#strengths">강점 보러 가기</a>
+            <a class="btn btn-line" href="mailto:[이메일 주소를 입력하세요]">메일 보내기</a>
+          </div>
+        </div>
+
+        <div class="scope-panel">
+          <div class="scope-head">이 페이지가 다루는 범위</div>
+          <div class="scope-cols">
+            <div class="scope-col">
+              <div class="scope-col-title"><span class="dot public" aria-hidden="true"></span>공개하는 정보</div>
+              <ul class="scope-list">
+                <li>러닝</li>
+                <li>맛집</li>
+                <li>전역</li>
+              </ul>
+            </div>
+            <div class="scope-col">
+              <div class="scope-col-title"><span class="dot private" aria-hidden="true"></span>다루지 않는 정보</div>
+              <ul class="scope-list">
+                <li>전화번호</li>
+                <li>정확한 주소</li>
+                <li>가족관계</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="strengths" class="block wrap">
+      <div class="block-head">
+        <h2>강점과 경험</h2>
+        <p class="block-lede">한 화면만 확인해도 저의 강점과 경험을 알 수 있습니다.</p>
+      </div>
+
+      <div class="strength-grid">
+
+        <article class="strength-card">
+          <div class="strength-index">01</div>
+          <h3>러닝과 마라톤</h3>
+          <button class="toggle-btn" type="button" aria-expanded="false" aria-controls="detail-1">
+            <span class="label">자세히 보기</span><span class="arrow" aria-hidden="true">⌄</span>
+          </button>
+          <div class="detail-wrap" id="detail-1-wrap">
+            <div class="detail-inner">
+              <div class="detail-body" id="detail-1">
+                <span>근거를 조금 더 자세히 설명하고, 개인정보를 지운 결과물이나 캡처 링크를 연결하세요.</span>
+                <br />
+                <a href="[공개 가능한 근거 주소]">근거 보러 가기 →</a>
+              </div>
+            </div>
+          </div>
+          <div class="sar">
+            <div class="sar-row"><span class="sar-label">상황</span><span class="sar-value">다이어트를 하기 위해 시작</span></div>
+            <div class="sar-row"><span class="sar-label">행동</span><span class="sar-value">하루 15km 이상 달리기</span></div>
+            <div class="sar-row"><span class="sar-label">결과</span><span class="sar-value">정확히 57일 동안 17kg 감량</span></div>
+          </div>
+        </article>
+
+        <article class="strength-card">
+          <div class="strength-index">02</div>
+          <h3>맛집</h3>
+          <button class="toggle-btn" type="button" aria-expanded="false" aria-controls="detail-2">
+            <span class="label">자세히 보기</span><span class="arrow" aria-hidden="true">⌄</span>
+          </button>
+          <div class="detail-wrap" id="detail-2-wrap">
+            <div class="detail-inner">
+              <div class="detail-body" id="detail-2">
+                <span>근거를 조금 더 자세히 설명하고, 개인정보를 지운 결과물이나 캡처 링크를 연결하세요.</span>
+                <br />
+                <a href="[공개 가능한 근거 주소]">근거 보러 가기 →</a>
+              </div>
+            </div>
+          </div>
+          <div class="sar">
+            <div class="sar-row"><span class="sar-label">상황</span><span class="sar-value">맛있는 걸 먹을 때 행복</span></div>
+            <div class="sar-row"><span class="sar-label">행동</span><span class="sar-value">해외까지 찾아감</span></div>
+            <div class="sar-row"><span class="sar-label">결과</span><span class="sar-value">행복했다.</span></div>
+          </div>
+        </article>
+
+        <article class="strength-card">
+          <div class="strength-index">03</div>
+          <h3>전역</h3>
+          <button class="toggle-btn" type="button" aria-expanded="false" aria-controls="detail-3">
+            <span class="label">자세히 보기</span><span class="arrow" aria-hidden="true">⌄</span>
+          </button>
+          <div class="detail-wrap" id="detail-3-wrap">
+            <div class="detail-inner">
+              <div class="detail-body" id="detail-3">
+                <span>근거를 조금 더 자세히 설명하고, 개인정보를 지운 결과물이나 캡처 링크를 연결하세요.</span>
+                <br />
+                <a href="[공개 가능한 근거 주소]">근거 보러 가기 →</a>
+              </div>
+            </div>
+          </div>
+          <div class="sar">
+            <div class="sar-row"><span class="sar-label">상황</span><span class="sar-value">루틴이 되는 업무만 해서 머리가 굳는걸 느낌</span></div>
+            <div class="sar-row"><span class="sar-label">행동</span><span class="sar-value">전역이라는 도전</span></div>
+            <div class="sar-row"><span class="sar-label">결과</span><span class="sar-value">새로운 배움과 환경</span></div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <section id="connect" class="block wrap">
+      <div class="block-head">
+        <h2>연결하기</h2>
+        <p class="block-lede">공개하기로 정한 연락 방법만 남겼습니다.</p>
+      </div>
+      <div class="connect-strip">
+        <a class="tile" href="mailto:[이메일 주소]">
+          <span class="tile-badge" aria-hidden="true">@</span>
+          <span class="tile-text"><strong>이메일</strong><span>[이메일 주소]</span></span>
+        </a>
+        <a class="tile" href="[GitHub 주소]">
+          <span class="tile-badge" aria-hidden="true">GH</span>
+          <span class="tile-text"><strong>GitHub</strong><span>[GitHub 주소를 입력하세요]</span></span>
+        </a>
+        <a class="tile" href="[포트폴리오나 이력서 주소]">
+          <span class="tile-badge" aria-hidden="true">CV</span>
+          <span class="tile-text"><strong>이력서 / 포트폴리오</strong><span>[주소를 입력하세요]</span></span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site wrap">
+    <p>이 페이지는 제가 공개하기로 정한 정보만 담았습니다. 최종 업데이트: <span>[날짜]</span></p>
+  </footer>
+
+  <script>
+    (function(){
+      document.querySelectorAll('.toggle-btn').forEach(function(btn){
+        var wrapId = btn.getAttribute('aria-controls') + '-wrap';
+        var wrap = document.getElementById(wrapId);
+        var label = btn.querySelector('.label');
+        btn.addEventListener('click', function(){
+          var expanded = btn.getAttribute('aria-expanded') === 'true';
+          btn.setAttribute('aria-expanded', String(!expanded));
+          wrap.classList.toggle('open', !expanded);
+          label.textContent = expanded ? '자세히 보기' : '접기';
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
