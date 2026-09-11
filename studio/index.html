@@ -64,6 +64,16 @@
   input[type="text"], input[type="color"]{ padding:6px 8px; border-radius:8px; border:1px solid var(--border); background:var(--surface-alt); color:var(--ink); font-family:inherit; }
   input[type="color"]{ width:44px; height:32px; padding:2px; }
 
+  .stepper{ display:flex; align-items:center; gap:6px; }
+  .stepper input[type="number"]{ width:64px; text-align:center; padding:6px 4px; border-radius:8px; border:1px solid var(--border); background:var(--surface-alt); color:var(--ink); font-family:inherit; font-weight:700; }
+  .btn-lane{ width:36px; padding:8px 0; font-size:1rem; }
+
+  .color-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .swatches{ display:flex; gap:6px; flex-wrap:wrap; }
+  .swatch{ width:26px; height:26px; border-radius:7px; border:2px solid var(--border); cursor:pointer; padding:0; }
+  .swatch:hover{ border-color:var(--accent); }
+  .swatch:focus-visible{ outline:3px solid var(--accent); outline-offset:2px; }
+
   .tpl-list{ list-style:none; margin:10px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; }
   .tpl-list[hidden]{ display:none; }
   .tpl-item{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; background:var(--surface-alt); font-size:0.85rem; }
@@ -117,20 +127,44 @@
             <textarea id="text-input">문구를 입력하세요</textarea>
           </div>
           <div class="field">
-            <label for="x-range">가로 위치</label>
-            <div class="field-row"><input type="range" id="x-range" min="0" max="100" value="50" /><span class="val" id="x-val">50%</span></div>
+            <label id="x-label">가로 위치 (%)</label>
+            <div class="stepper" role="group" aria-labelledby="x-label">
+              <button class="btn btn-lane" id="x-minus" type="button" aria-label="가로 위치 감소">−</button>
+              <input type="number" id="x-input" min="0" max="100" step="5" value="50" />
+              <button class="btn btn-lane" id="x-plus" type="button" aria-label="가로 위치 증가">+</button>
+            </div>
           </div>
           <div class="field">
-            <label for="y-range">세로 위치</label>
-            <div class="field-row"><input type="range" id="y-range" min="0" max="100" value="85" /><span class="val" id="y-val">85%</span></div>
+            <label id="y-label">세로 위치 (%)</label>
+            <div class="stepper" role="group" aria-labelledby="y-label">
+              <button class="btn btn-lane" id="y-minus" type="button" aria-label="세로 위치 감소">−</button>
+              <input type="number" id="y-input" min="0" max="100" step="5" value="85" />
+              <button class="btn btn-lane" id="y-plus" type="button" aria-label="세로 위치 증가">+</button>
+            </div>
           </div>
           <div class="field">
-            <label for="size-range">글자 크기</label>
-            <div class="field-row"><input type="range" id="size-range" min="16" max="160" value="56" /><span class="val" id="size-val">56px</span></div>
+            <label id="size-label">글자 크기 (px)</label>
+            <div class="stepper" role="group" aria-labelledby="size-label">
+              <button class="btn btn-lane" id="size-minus" type="button" aria-label="글자 크기 감소">−</button>
+              <input type="number" id="size-input" min="8" max="240" step="4" value="56" />
+              <button class="btn btn-lane" id="size-plus" type="button" aria-label="글자 크기 증가">+</button>
+            </div>
           </div>
           <div class="field">
             <label for="color-input">글자 색</label>
-            <input type="color" id="color-input" value="#ffffff" />
+            <div class="color-row">
+              <input type="color" id="color-input" value="#ffffff" />
+              <div class="swatches" id="color-swatches" role="group" aria-label="자주 쓰는 색상">
+                <button class="swatch" type="button" data-color="#ffffff" style="background:#ffffff" aria-label="흰색"></button>
+                <button class="swatch" type="button" data-color="#000000" style="background:#000000" aria-label="검정색"></button>
+                <button class="swatch" type="button" data-color="#E23B5D" style="background:#E23B5D" aria-label="빨간색"></button>
+                <button class="swatch" type="button" data-color="#FF9F1C" style="background:#FF9F1C" aria-label="주황색"></button>
+                <button class="swatch" type="button" data-color="#FFD400" style="background:#FFD400" aria-label="노란색"></button>
+                <button class="swatch" type="button" data-color="#0B7A3B" style="background:#0B7A3B" aria-label="초록색"></button>
+                <button class="swatch" type="button" data-color="#2F6FED" style="background:#2F6FED" aria-label="파란색"></button>
+                <button class="swatch" type="button" data-color="#6C4CFF" style="background:#6C4CFF" aria-label="보라색"></button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -188,13 +222,11 @@
     var imageMsg = document.getElementById('image-msg');
     var btnDownload = document.getElementById('btn-download');
     var textInput = document.getElementById('text-input');
-    var xRange = document.getElementById('x-range');
-    var yRange = document.getElementById('y-range');
-    var sizeRange = document.getElementById('size-range');
+    var xInput = document.getElementById('x-input');
+    var yInput = document.getElementById('y-input');
+    var sizeInput = document.getElementById('size-input');
     var colorInput = document.getElementById('color-input');
-    var xVal = document.getElementById('x-val');
-    var yVal = document.getElementById('y-val');
-    var sizeVal = document.getElementById('size-val');
+    var colorSwatches = document.getElementById('color-swatches');
     var tplNameInput = document.getElementById('tpl-name');
     var btnTplSave = document.getElementById('btn-tpl-save');
     var tplList = document.getElementById('tpl-list');
@@ -498,9 +530,9 @@
       state.imageDataURL = tpl.imageDataURL;
       tplNameInput.value = tpl.name;
       textInput.value = tpl.text;
-      xRange.value = String(tpl.x); xVal.textContent = tpl.x + '%';
-      yRange.value = String(tpl.y); yVal.textContent = tpl.y + '%';
-      sizeRange.value = String(tpl.fontSize); sizeVal.textContent = tpl.fontSize + 'px';
+      xInput.value = String(tpl.x);
+      yInput.value = String(tpl.y);
+      sizeInput.value = String(tpl.fontSize);
       colorInput.value = tpl.color;
       Object.keys(aspectBtns).forEach(function(k){
         aspectBtns[k].setAttribute('aria-pressed', String(k === tpl.aspect));
@@ -610,10 +642,43 @@
     });
 
     textInput.addEventListener('input', function(){ state.text = textInput.value; render(); });
-    xRange.addEventListener('input', function(){ state.x = parseInt(xRange.value, 10); xVal.textContent = state.x + '%'; render(); });
-    yRange.addEventListener('input', function(){ state.y = parseInt(yRange.value, 10); yVal.textContent = state.y + '%'; render(); });
-    sizeRange.addEventListener('input', function(){ state.fontSize = parseInt(sizeRange.value, 10); sizeVal.textContent = state.fontSize + 'px'; render(); });
+    function bindStepper(input, minusBtn, plusBtn, min, max, step, onChange){
+      function apply(v){
+        v = Math.max(min, Math.min(max, v));
+        input.value = String(v);
+        onChange(v);
+        render();
+      }
+      input.addEventListener('input', function(){
+        var v = parseInt(input.value, 10);
+        if(isNaN(v)) return;
+        apply(v);
+      });
+      input.addEventListener('blur', function(){
+        var v = parseInt(input.value, 10);
+        apply(isNaN(v) ? min : v);
+      });
+      minusBtn.addEventListener('click', function(){
+        apply((parseInt(input.value, 10) || 0) - step);
+      });
+      plusBtn.addEventListener('click', function(){
+        apply((parseInt(input.value, 10) || 0) + step);
+      });
+    }
+
+    bindStepper(xInput, document.getElementById('x-minus'), document.getElementById('x-plus'), 0, 100, 5, function(v){ state.x = v; });
+    bindStepper(yInput, document.getElementById('y-minus'), document.getElementById('y-plus'), 0, 100, 5, function(v){ state.y = v; });
+    bindStepper(sizeInput, document.getElementById('size-minus'), document.getElementById('size-plus'), 8, 240, 4, function(v){ state.fontSize = v; });
+
     colorInput.addEventListener('input', function(){ state.color = colorInput.value; render(); });
+    colorSwatches.addEventListener('click', function(e){
+      var btn = e.target.closest('.swatch');
+      if(!btn) return;
+      var c = btn.getAttribute('data-color');
+      state.color = c;
+      colorInput.value = c;
+      render();
+    });
 
     btnTplSave.addEventListener('click', function(){
       var name = tplNameInput.value.trim();
