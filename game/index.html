@@ -174,7 +174,15 @@
     margin-top:10px;
   }
   .field-row label{ color:var(--ink); font-weight:600; }
-  input[type="range"]{ width:120px; }
+  input[type="number"]{
+    width:64px;
+    padding:5px 6px;
+    border-radius:6px;
+    border:1px solid var(--border);
+    background:var(--surface-alt);
+    color:var(--ink);
+    font-family:inherit;
+  }
   input[type="checkbox"]{ width:16px; height:16px; }
 
   table.records{
@@ -264,7 +272,7 @@
           <p>바뀌는 값은 낙하 속도 하나뿐입니다. 라운드 진행 중에는 바꿀 수 없습니다. 5단계가 평균적인 난이도이며, 직접 조절해서 플레이할 수 있습니다.</p>
           <div class="field-row">
             <label for="difficulty-range">낙하 속도 (1~10, 5=평균)</label>
-            <input type="range" id="difficulty-range" min="1" max="10" step="1" value="5" />
+            <input type="number" id="difficulty-range" min="1" max="10" step="1" value="5" />
           </div>
           <div class="field-row">
             <label for="mute-toggle">효과음/배경음악 끄기</label>
@@ -658,9 +666,15 @@
     btnRight.addEventListener('click', function(){ movePlayer(1); });
 
     difficultyRange.addEventListener('input', function(){
-      save_.difficulty = parseInt(difficultyRange.value, 10);
-      difficultyText.textContent = String(save_.difficulty);
+      var v = parseInt(difficultyRange.value, 10);
+      if(isNaN(v)) return;
+      v = Math.max(1, Math.min(10, v));
+      save_.difficulty = v;
+      difficultyText.textContent = String(v);
       save();
+    });
+    difficultyRange.addEventListener('blur', function(){
+      difficultyRange.value = String(save_.difficulty);
     });
     muteToggle.addEventListener('change', function(){
       save_.muted = muteToggle.checked;
