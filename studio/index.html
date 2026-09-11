@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>짤·카드 스튜디오</title>
+<meta name="description" content="이미지와 문구를 조합해 밈·카드 이미지를 만들고 내려받는 편집기" />
+<style>
+  :root{
+    --bg:#F5F6FF;
+    --surface:#FFFFFF;
+    --surface-alt:#EEF0FF;
+    --ink:#181B2E;
+    --ink-soft:#5C6079;
+    --accent:#6C4CFF;
+    --accent-dark:#5638E0;
+    --accent-ink:#FFFFFF;
+    --border:#E1E4F7;
+    --good:#0B7A3B;
+    --bad:#C41E4C;
+    --radius:14px;
+    --maxw:1080px;
+    font-family:-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  }
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{ margin:0; background:var(--bg); color:var(--ink); line-height:1.55; overflow-x:hidden; }
+  :focus-visible{ outline:3px solid var(--accent); outline-offset:2px; border-radius:4px; }
+  .wrap{ max-width:var(--maxw); margin:0 auto; padding:16px 24px 40px; }
+  header.site h1{ font-size:1.25rem; margin:0 0 2px; }
+  header.site p{ margin:0; color:var(--ink-soft); font-size:0.85rem; }
+
+  .layout{ display:grid; grid-template-columns:minmax(0,440px) minmax(300px,1fr); gap:18px; margin-top:14px; align-items:start; }
+  @media (max-width:860px){ .layout{ grid-template-columns:1fr; } }
+
+  .stage{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px; }
+  .canvas-wrap{ position:relative; width:100%; background:repeating-conic-gradient(#EEF0FF 0% 25%, #FFFFFF 0% 50%) 0 0/20px 20px; border-radius:10px; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  canvas{ max-width:100%; max-height:60vh; display:block; }
+
+  .aspect-row{ display:flex; gap:8px; margin-top:12px; }
+  .aspect-btn{ flex:1; padding:8px 0; border-radius:9px; border:1px solid var(--border); background:var(--surface-alt); color:var(--ink); font-weight:700; font-size:0.85rem; cursor:pointer; }
+  .aspect-btn[aria-pressed="true"]{ border-color:var(--accent); background:var(--accent); color:var(--accent-ink); }
+
+  .file-row{ margin-top:12px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:9px 16px; border-radius:9px; font-weight:700; font-size:0.9rem; border:1px solid var(--border); background:var(--surface-alt); color:var(--ink); cursor:pointer; font-family:inherit; }
+  .btn:hover{ border-color:var(--accent); color:var(--accent); }
+  .btn-solid{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  .btn-solid:hover{ background:var(--accent-dark); color:var(--accent-ink); }
+  .btn-sm{ padding:6px 10px; font-size:0.78rem; }
+  .btn:disabled{ opacity:.45; cursor:not-allowed; }
+
+  .msg{ margin-top:8px; font-size:0.82rem; padding:8px 10px; border-radius:8px; display:none; }
+  .msg.error{ display:block; background:#FDEAEF; color:var(--bad); border:1px solid #F5C2D0; }
+  .msg.ok{ display:block; background:#E8F6EC; color:var(--good); border:1px solid #C3E6CE; }
+
+  .panel{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px; margin-bottom:14px; }
+  .panel h2{ font-size:0.92rem; margin:0 0 10px; }
+  .field{ margin-top:10px; }
+  .field label{ display:block; font-size:0.8rem; font-weight:700; color:var(--ink); margin-bottom:4px; }
+  .field-row{ display:flex; align-items:center; gap:8px; }
+  .field-row input[type="range"]{ flex:1; }
+  .field-row .val{ min-width:34px; text-align:right; font-size:0.8rem; color:var(--ink-soft); }
+  textarea{ width:100%; min-height:64px; resize:vertical; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface-alt); color:var(--ink); font-family:inherit; font-size:0.9rem; }
+  input[type="text"], input[type="color"]{ padding:6px 8px; border-radius:8px; border:1px solid var(--border); background:var(--surface-alt); color:var(--ink); font-family:inherit; }
+  input[type="color"]{ width:44px; height:32px; padding:2px; }
+
+  .tpl-list{ list-style:none; margin:10px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .tpl-item{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; background:var(--surface-alt); font-size:0.85rem; }
+  .tpl-item .tpl-name{ font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tpl-actions{ display:flex; gap:4px; flex:0 0 auto; }
+  .tpl-empty{ color:var(--ink-soft); font-size:0.82rem; margin-top:8px; }
+
+  .samples{ display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+  .sample-card{ width:120px; }
+  .sample-card img{ width:100%; border-radius:8px; border:1px solid var(--border); display:block; }
+  .sample-card p{ font-size:0.72rem; color:var(--ink-soft); margin:4px 0 0; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="site">
+      <h1>짤·카드 스튜디오</h1>
+      <p>이미지를 불러와 문구를 얹고, 1:1·4:5·9:16 비율로 잘라 PNG로 내려받는 편집기입니다.</p>
+    </header>
+
+    <div class="layout">
+      <div class="stage">
+        <div class="canvas-wrap">
+          <canvas id="card-canvas" width="1080" height="1080" aria-label="카드 미리보기"></canvas>
+        </div>
+
+        <div class="aspect-row" role="group" aria-label="화면비 선택">
+          <button class="aspect-btn" id="aspect-1-1" type="button" aria-pressed="true">1:1</button>
+          <button class="aspect-btn" id="aspect-4-5" type="button" aria-pressed="false">4:5</button>
+          <button class="aspect-btn" id="aspect-9-16" type="button" aria-pressed="false">9:16</button>
+        </div>
+
+        <div class="file-row">
+          <label class="btn" for="image-input">이미지 불러오기 (PNG·JPEG)</label>
+          <input type="file" id="image-input" accept="image/png,image/jpeg" style="position:absolute; width:1px; height:1px; opacity:0;" />
+          <button class="btn btn-solid" id="btn-download" type="button">PNG로 내려받기</button>
+        </div>
+        <div class="msg" id="image-msg"></div>
+      </div>
+
+      <div class="side">
+        <div class="panel">
+          <h2>문구 편집</h2>
+          <div class="field">
+            <label for="text-input">문구 (줄바꿈 가능)</label>
+            <textarea id="text-input">문구를 입력하세요</textarea>
+          </div>
+          <div class="field">
+            <label for="x-range">가로 위치</label>
+            <div class="field-row"><input type="range" id="x-range" min="0" max="100" value="50" /><span class="val" id="x-val">50%</span></div>
+          </div>
+          <div class="field">
+            <label for="y-range">세로 위치</label>
+            <div class="field-row"><input type="range" id="y-range" min="0" max="100" value="85" /><span class="val" id="y-val">85%</span></div>
+          </div>
+          <div class="field">
+            <label for="size-range">글자 크기</label>
+            <div class="field-row"><input type="range" id="size-range" min="16" max="160" value="56" /><span class="val" id="size-val">56px</span></div>
+          </div>
+          <div class="field">
+            <label for="color-input">글자 색</label>
+            <input type="color" id="color-input" value="#ffffff" />
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>템플릿</h2>
+          <div class="field-row">
+            <input type="text" id="tpl-name" placeholder="템플릿 이름" style="flex:1;" />
+            <button class="btn btn-sm" id="btn-tpl-save" type="button">저장</button>
+          </div>
+          <ul class="tpl-list" id="tpl-list" hidden></ul>
+          <p class="tpl-empty" id="tpl-empty">저장된 템플릿이 없습니다.</p>
+          <div class="field-row" style="margin-top:10px;">
+            <label class="btn btn-sm" for="tpl-import">JSON 가져오기</label>
+            <input type="file" id="tpl-import" accept="application/json" style="position:absolute; width:1px; height:1px; opacity:0;" />
+          </div>
+          <div class="msg" id="tpl-msg"></div>
+        </div>
+
+        <div class="panel">
+          <h2>예시 완성 이미지</h2>
+          <p style="font-size:0.8rem; color:var(--ink-soft); margin:0;">이 도구로 직접 만든 예시 3장입니다.</p>
+          <div class="samples" id="samples">
+            <div class="sample-card">
+              <img src="samples/sample-1-1x1.png" alt="예시 카드 1 (1:1)" />
+              <p>1:1 · 본인 제작</p>
+            </div>
+            <div class="sample-card">
+              <img src="samples/sample-2-4x5.png" alt="예시 카드 2 (4:5)" />
+              <p>4:5 · 본인 제작</p>
+            </div>
+            <div class="sample-card">
+              <img src="samples/sample-3-9x16.png" alt="예시 카드 3 (9:16)" />
+              <p>9:16 · 본인 제작</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    'use strict';
+
+    var ASPECTS = {
+      '1:1': { w: 1080, h: 1080 },
+      '4:5': { w: 1080, h: 1350 },
+      '9:16': { w: 1080, h: 1920 }
+    };
+    var TPL_KEY = 'card-studio-templates-v1';
+
+    var canvas = document.getElementById('card-canvas');
+    var ctx = canvas.getContext('2d');
+    var imageInput = document.getElementById('image-input');
+    var imageMsg = document.getElementById('image-msg');
+    var btnDownload = document.getElementById('btn-download');
+    var textInput = document.getElementById('text-input');
+    var xRange = document.getElementById('x-range');
+    var yRange = document.getElementById('y-range');
+    var sizeRange = document.getElementById('size-range');
+    var colorInput = document.getElementById('color-input');
+    var xVal = document.getElementById('x-val');
+    var yVal = document.getElementById('y-val');
+    var sizeVal = document.getElementById('size-val');
+    var tplNameInput = document.getElementById('tpl-name');
+    var btnTplSave = document.getElementById('btn-tpl-save');
+    var tplList = document.getElementById('tpl-list');
+    var tplEmpty = document.getElementById('tpl-empty');
+    var tplImport = document.getElementById('tpl-import');
+    var tplMsg = document.getElementById('tpl-msg');
+    var aspectBtns = {
+      '1:1': document.getElementById('aspect-1-1'),
+      '4:5': document.getElementById('aspect-4-5'),
+      '9:16': document.getElementById('aspect-9-16')
+    };
+
+    var state = {
+      aspect: '1:1',
+      imgEl: null,
+      imageDataURL: null,
+      text: textInput.value,
+      x: 50,
+      y: 85,
+      fontSize: 56,
+      color: '#ffffff'
+    };
+
+    var templates = loadTemplates();
+
+    function defaultTemplates(){ return []; }
+
+    function isValidTemplate(t){
+      return t && typeof t === 'object'
+        && typeof t.name === 'string' && t.name.length > 0
+        && typeof t.aspect === 'string' && ASPECTS.hasOwnProperty(t.aspect)
+        && typeof t.text === 'string'
+        && typeof t.x === 'number' && t.x >= 0 && t.x <= 100
+        && typeof t.y === 'number' && t.y >= 0 && t.y <= 100
+        && typeof t.fontSize === 'number' && t.fontSize > 0
+        && typeof t.color === 'string'
+        && (t.imageDataURL === null || typeof t.imageDataURL === 'string');
+    }
+
+    function loadTemplates(){
+      var raw;
+      try{ raw = localStorage.getItem(TPL_KEY); }catch(err){ return defaultTemplates(); }
+      if(!raw) return defaultTemplates();
+      try{
+        var parsed = JSON.parse(raw);
+        if(!Array.isArray(parsed)) return defaultTemplates();
+        return parsed.filter(isValidTemplate);
+      }catch(err){ return defaultTemplates(); }
+    }
+
+    function saveTemplates(){
+      try{ localStorage.setItem(TPL_KEY, JSON.stringify(templates)); }catch(err){ /* storage unavailable */ }
+    }
+
+    function showMsg(el, text, kind){
+      el.textContent = text;
+      el.className = 'msg ' + kind;
+    }
+    function clearMsg(el){
+      el.textContent = '';
+      el.className = 'msg';
+    }
+
+    function wrapWord(c, word, maxWidth, lines){
+      if(c.measureText(word).width <= maxWidth){ lines.push(word); return; }
+      var chunk = '';
+      for(var i = 0; i < word.length; i++){
+        var next = chunk + word[i];
+        if(c.measureText(next).width > maxWidth && chunk !== ''){
+          lines.push(chunk);
+          chunk = word[i];
+        }else{
+          chunk = next;
+        }
+      }
+      if(chunk) lines.push(chunk);
+    }
+
+    function wrapParagraph(c, text, maxWidth){
+      var lines = [];
+      if(text === ''){ lines.push(''); return lines; }
+      var words = text.split(' ');
+      var current = '';
+      for(var i = 0; i < words.length; i++){
+        var word = words[i];
+        if(c.measureText(word).width > maxWidth){
+          if(current){ lines.push(current); current = ''; }
+          wrapWord(c, word, maxWidth, lines);
+          continue;
+        }
+        var test = current ? current + ' ' + word : word;
+        if(c.measureText(test).width <= maxWidth){
+          current = test;
+        }else{
+          if(current) lines.push(current);
+          current = word;
+        }
+      }
+      if(current) lines.push(current);
+      return lines;
+    }
+
+    function wrapText(c, text, maxWidth){
+      var out = [];
+      text.split('\n').forEach(function(p){
+        wrapParagraph(c, p, maxWidth).forEach(function(l){ out.push(l); });
+      });
+      return out;
+    }
+
+    var MIN_FONT_SIZE = 14;
+
+    function fitTextToBox(c, text, maxWidth, maxHeight, initialSize){
+      var size = initialSize;
+      var lines;
+      while(size > MIN_FONT_SIZE){
+        c.font = '700 ' + size + 'px -apple-system, "Noto Sans KR", sans-serif';
+        lines = wrapText(c, text, maxWidth);
+        if(lines.length * (size * 1.25) <= maxHeight) break;
+        size -= 2;
+      }
+      c.font = '700 ' + size + 'px -apple-system, "Noto Sans KR", sans-serif';
+      lines = wrapText(c, text, maxWidth);
+      return { size: size, lines: lines };
+    }
+
+    function drawCoverImage(c, img, dx, dy, dw, dh){
+      var ir = img.width / img.height;
+      var tr = dw / dh;
+      var sx, sy, sw, sh;
+      if(ir > tr){
+        sh = img.height;
+        sw = sh * tr;
+        sx = (img.width - sw) / 2;
+        sy = 0;
+      }else{
+        sw = img.width;
+        sh = sw / tr;
+        sx = 0;
+        sy = (img.height - sh) / 2;
+      }
+      c.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+    }
+
+    function render(){
+      var dims = ASPECTS[state.aspect];
+      canvas.width = dims.w;
+      canvas.height = dims.h;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if(state.imgEl){
+        drawCoverImage(ctx, state.imgEl, 0, 0, canvas.width, canvas.height);
+      }else{
+        ctx.fillStyle = '#E1E4F7';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#5C6079';
+        ctx.font = '600 ' + Math.round(canvas.width * 0.035) + 'px -apple-system, "Noto Sans KR", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('이미지를 불러오세요', canvas.width / 2, canvas.height / 2);
+      }
+
+      if(state.text){
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        var maxWidth = canvas.width * 0.9;
+        var maxHeight = canvas.height * 0.92;
+        var fitted = fitTextToBox(ctx, state.text, maxWidth, maxHeight, state.fontSize);
+        var lineHeight = fitted.size * 1.25;
+        var totalH = fitted.lines.length * lineHeight;
+        var margin = lineHeight * 0.3;
+        var centerY = (state.y / 100) * canvas.height;
+        centerY = Math.max(totalH / 2 + margin, Math.min(canvas.height - totalH / 2 - margin, centerY));
+        var startY = centerY - totalH / 2 + lineHeight / 2;
+        var x = (state.x / 100) * canvas.width;
+        ctx.font = '700 ' + fitted.size + 'px -apple-system, "Noto Sans KR", sans-serif';
+        ctx.lineWidth = Math.max(2, fitted.size * 0.1);
+        ctx.strokeStyle = 'rgba(0,0,0,0.65)';
+        ctx.fillStyle = state.color;
+        fitted.lines.forEach(function(line, i){
+          var ly = startY + i * lineHeight;
+          ctx.strokeText(line, x, ly);
+          ctx.fillText(line, x, ly);
+        });
+      }
+    }
+
+    function setAspect(key){
+      state.aspect = key;
+      Object.keys(aspectBtns).forEach(function(k){
+        aspectBtns[k].setAttribute('aria-pressed', String(k === key));
+      });
+      render();
+    }
+
+    function handleImageFile(file){
+      if(!file) return;
+      if(file.type !== 'image/png' && file.type !== 'image/jpeg'){
+        showMsg(imageMsg, 'PNG 또는 JPEG 파일만 지원합니다. (' + (file.type || '알 수 없는 형식') + ') 기존 작업은 그대로 유지됩니다.', 'error');
+        return;
+      }
+      var reader = new FileReader();
+      reader.onload = function(){
+        var dataURL = reader.result;
+        var img = new Image();
+        img.onload = function(){
+          state.imgEl = img;
+          state.imageDataURL = dataURL;
+          clearMsg(imageMsg);
+          render();
+        };
+        img.onerror = function(){
+          showMsg(imageMsg, '이미지를 열 수 없습니다. 파일이 손상되었을 수 있습니다. 기존 작업은 그대로 유지됩니다.', 'error');
+        };
+        img.src = dataURL;
+      };
+      reader.onerror = function(){
+        showMsg(imageMsg, '파일을 읽을 수 없습니다. 기존 작업은 그대로 유지됩니다.', 'error');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function downloadCanvas(){
+      canvas.toBlob(function(blob){
+        if(!blob) return;
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'card-' + state.aspect.replace(':', 'x') + '.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+      }, 'image/png');
+    }
+
+    function currentTemplateData(name){
+      return {
+        name: name,
+        aspect: state.aspect,
+        text: state.text,
+        x: state.x,
+        y: state.y,
+        fontSize: state.fontSize,
+        color: state.color,
+        imageDataURL: state.imageDataURL
+      };
+    }
+
+    function upsertTemplate(tpl){
+      var idx = templates.findIndex(function(t){ return t.name === tpl.name; });
+      if(idx >= 0) templates[idx] = tpl; else templates.push(tpl);
+      saveTemplates();
+      renderTemplateList();
+    }
+
+    function loadTemplate(tpl){
+      state.aspect = tpl.aspect;
+      state.text = tpl.text;
+      state.x = tpl.x;
+      state.y = tpl.y;
+      state.fontSize = tpl.fontSize;
+      state.color = tpl.color;
+      state.imageDataURL = tpl.imageDataURL;
+      tplNameInput.value = tpl.name;
+      textInput.value = tpl.text;
+      xRange.value = String(tpl.x); xVal.textContent = tpl.x + '%';
+      yRange.value = String(tpl.y); yVal.textContent = tpl.y + '%';
+      sizeRange.value = String(tpl.fontSize); sizeVal.textContent = tpl.fontSize + 'px';
+      colorInput.value = tpl.color;
+      Object.keys(aspectBtns).forEach(function(k){
+        aspectBtns[k].setAttribute('aria-pressed', String(k === tpl.aspect));
+      });
+      if(tpl.imageDataURL){
+        var img = new Image();
+        img.onload = function(){ state.imgEl = img; render(); };
+        img.src = tpl.imageDataURL;
+      }else{
+        state.imgEl = null;
+        render();
+      }
+    }
+
+    function renderTemplateList(){
+      if(!templates.length){
+        tplList.hidden = true;
+        tplEmpty.hidden = false;
+        return;
+      }
+      tplList.hidden = false;
+      tplEmpty.hidden = true;
+      tplList.innerHTML = '';
+      templates.forEach(function(tpl){
+        var li = document.createElement('li');
+        li.className = 'tpl-item';
+        var nameSpan = document.createElement('span');
+        nameSpan.className = 'tpl-name';
+        nameSpan.textContent = tpl.name;
+        var actions = document.createElement('span');
+        actions.className = 'tpl-actions';
+
+        var btnLoad = document.createElement('button');
+        btnLoad.className = 'btn btn-sm'; btnLoad.type = 'button'; btnLoad.textContent = '불러오기';
+        btnLoad.addEventListener('click', function(){ loadTemplate(tpl); });
+
+        var btnExport = document.createElement('button');
+        btnExport.className = 'btn btn-sm'; btnExport.type = 'button'; btnExport.textContent = '내보내기';
+        btnExport.addEventListener('click', function(){ exportTemplateJSON(tpl); });
+
+        var btnDelete = document.createElement('button');
+        btnDelete.className = 'btn btn-sm'; btnDelete.type = 'button'; btnDelete.textContent = '삭제';
+        btnDelete.addEventListener('click', function(){
+          templates = templates.filter(function(t){ return t.name !== tpl.name; });
+          saveTemplates();
+          renderTemplateList();
+        });
+
+        actions.appendChild(btnLoad);
+        actions.appendChild(btnExport);
+        actions.appendChild(btnDelete);
+        li.appendChild(nameSpan);
+        li.appendChild(actions);
+        tplList.appendChild(li);
+      });
+    }
+
+    function exportTemplateJSON(tpl){
+      var blob = new Blob([JSON.stringify(tpl, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = tpl.name + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    }
+
+    function importTemplateJSON(file){
+      if(!file) return;
+      var reader = new FileReader();
+      reader.onload = function(){
+        var parsed;
+        try{
+          parsed = JSON.parse(reader.result);
+        }catch(err){
+          showMsg(tplMsg, 'JSON 형식이 올바르지 않습니다. 기존 템플릿은 그대로 유지됩니다.', 'error');
+          return;
+        }
+        if(!isValidTemplate(parsed)){
+          showMsg(tplMsg, '필수 항목이 없거나 형식이 올바르지 않습니다. 기존 템플릿은 그대로 유지됩니다.', 'error');
+          return;
+        }
+        upsertTemplate(parsed);
+        showMsg(tplMsg, '"' + parsed.name + '" 템플릿을 복원했습니다.', 'ok');
+      };
+      reader.onerror = function(){
+        showMsg(tplMsg, '파일을 읽을 수 없습니다. 기존 템플릿은 그대로 유지됩니다.', 'error');
+      };
+      reader.readAsText(file);
+    }
+
+    imageInput.addEventListener('change', function(){
+      handleImageFile(imageInput.files[0]);
+      imageInput.value = '';
+    });
+    btnDownload.addEventListener('click', downloadCanvas);
+    Object.keys(aspectBtns).forEach(function(key){
+      aspectBtns[key].addEventListener('click', function(){ setAspect(key); });
+    });
+
+    textInput.addEventListener('input', function(){ state.text = textInput.value; render(); });
+    xRange.addEventListener('input', function(){ state.x = parseInt(xRange.value, 10); xVal.textContent = state.x + '%'; render(); });
+    yRange.addEventListener('input', function(){ state.y = parseInt(yRange.value, 10); yVal.textContent = state.y + '%'; render(); });
+    sizeRange.addEventListener('input', function(){ state.fontSize = parseInt(sizeRange.value, 10); sizeVal.textContent = state.fontSize + 'px'; render(); });
+    colorInput.addEventListener('input', function(){ state.color = colorInput.value; render(); });
+
+    btnTplSave.addEventListener('click', function(){
+      var name = tplNameInput.value.trim();
+      if(!name){
+        showMsg(tplMsg, '템플릿 이름을 입력하세요.', 'error');
+        return;
+      }
+      upsertTemplate(currentTemplateData(name));
+      showMsg(tplMsg, '"' + name + '" 템플릿을 저장했습니다.', 'ok');
+    });
+    tplImport.addEventListener('change', function(){
+      importTemplateJSON(tplImport.files[0]);
+      tplImport.value = '';
+    });
+
+    renderTemplateList();
+    render();
+  })();
+  </script>
+</body>
+</html>
