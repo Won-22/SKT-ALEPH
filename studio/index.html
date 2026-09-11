@@ -65,6 +65,7 @@
   input[type="color"]{ width:44px; height:32px; padding:2px; }
 
   .tpl-list{ list-style:none; margin:10px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .tpl-list[hidden]{ display:none; }
   .tpl-item{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; background:var(--surface-alt); font-size:0.85rem; }
   .tpl-item .tpl-name{ font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .tpl-actions{ display:flex; gap:4px; flex:0 0 auto; }
@@ -473,6 +474,7 @@
     }
 
     function renderTemplateList(){
+      tplList.innerHTML = '';
       if(!templates.length){
         tplList.hidden = true;
         tplEmpty.hidden = false;
@@ -480,7 +482,6 @@
       }
       tplList.hidden = false;
       tplEmpty.hidden = true;
-      tplList.innerHTML = '';
       templates.forEach(function(tpl){
         var li = document.createElement('li');
         li.className = 'tpl-item';
