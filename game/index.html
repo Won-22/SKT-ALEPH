@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>레인 대시 — 피하기 게임</title>
+<meta name="description" content="5개 차선에서 떨어지는 장애물을 피하는 짧은 브라우저 게임" />
+<style>
+  :root{
+    --bg:#0F1420;
+    --surface:#171E2E;
+    --surface-alt:#1E2740;
+    --ink:#EDF1F8;
+    --ink-soft:#9AA5BD;
+    --accent:#4C9AFF;
+    --accent-ink:#04122B;
+    --border:#2B354D;
+    --good:#2ECC71;
+    --bad:#FF5C5C;
+    --radius:14px;
+    --maxw:1040px;
+    font-family:-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  }
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.55;
+    overflow-x:hidden;
+  }
+  :focus-visible{
+    outline:3px solid var(--accent);
+    outline-offset:2px;
+    border-radius:4px;
+  }
+  .wrap{
+    max-width:var(--maxw);
+    margin:0 auto;
+    padding:12px 24px 32px;
+  }
+  header.site h1{
+    font-size:1.2rem;
+    margin:0 0 2px;
+  }
+  header.site p{
+    margin:0;
+    color:var(--ink-soft);
+    font-size:0.85rem;
+  }
+  .layout{
+    display:grid;
+    grid-template-columns:minmax(0,460px) minmax(280px,1fr);
+    gap:18px;
+    margin-top:12px;
+    align-items:start;
+  }
+  .stage{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:12px;
+  }
+  .stage-canvas-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:1/1;
+    max-width:420px;
+    margin:0 auto;
+  }
+  canvas{
+    width:100%;
+    height:100%;
+    display:block;
+    border-radius:10px;
+    background:#0B0F19;
+    touch-action:none;
+  }
+  .flash-layer{
+    position:absolute;
+    inset:0;
+    border-radius:10px;
+    pointer-events:none;
+    opacity:0;
+  }
+  .flash-layer.flash-fail{ background:var(--bad); animation:flashPulse .4s ease-out; }
+  .flash-layer.flash-success{ background:var(--good); animation:flashPulse .4s ease-out; }
+  @keyframes flashPulse{
+    0%{ opacity:.55; }
+    100%{ opacity:0; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .flash-layer.flash-fail, .flash-layer.flash-success{ animation:none !important; opacity:0 !important; }
+  }
+
+  .hud{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:10px;
+  }
+  .hud-chip{
+    background:var(--surface-alt);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:6px 10px;
+    font-size:0.78rem;
+    color:var(--ink-soft);
+  }
+  .hud-chip strong{
+    display:block;
+    color:var(--ink);
+    font-size:1rem;
+    margin-top:2px;
+  }
+  .hud-chip.state-ready strong{ color:var(--ink); }
+  .hud-chip.state-playing strong{ color:var(--accent); }
+  .hud-chip.state-success strong{ color:var(--good); }
+  .hud-chip.state-fail strong{ color:var(--bad); }
+  .hud-chip.state-paused strong{ color:#F5B841; }
+
+  .controls-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:10px;
+  }
+  button{
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .btn{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:9px 16px;
+    border-radius:9px;
+    font-weight:700;
+    font-size:0.9rem;
+    border:1px solid var(--border);
+    background:var(--surface-alt);
+    color:var(--ink);
+  }
+  .btn:hover{ border-color:var(--accent); color:var(--accent); }
+  .btn-solid{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  .btn-solid:hover{ background:#3D86EE; color:var(--accent-ink); }
+  .btn-lane{ width:44px; padding:9px 0; text-align:center; font-size:1.1rem; }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+
+  .panel{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:16px;
+  }
+  .panel h2{
+    font-size:0.95rem;
+    margin:0 0 8px;
+    color:var(--ink);
+  }
+  .panel p, .panel li{
+    font-size:0.85rem;
+    color:var(--ink-soft);
+  }
+  .panel ul{ margin:0; padding-left:18px; }
+  .panel ul li + li{ margin-top:4px; }
+
+  .field-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    font-size:0.85rem;
+    margin-top:10px;
+  }
+  .field-row label{ color:var(--ink); font-weight:600; }
+  input[type="range"]{ width:120px; }
+  input[type="checkbox"]{ width:16px; height:16px; }
+
+  table.records{
+    width:100%;
+    border-collapse:collapse;
+    font-size:0.78rem;
+    margin-top:10px;
+  }
+  table.records th, table.records td{
+    border-bottom:1px solid var(--border);
+    padding:5px 6px;
+    text-align:left;
+    color:var(--ink-soft);
+    white-space:nowrap;
+  }
+  table.records th{ color:var(--ink); font-weight:700; }
+  .records-wrap{ max-height:220px; overflow-y:auto; overflow-x:auto; }
+  .records-empty{ color:var(--ink-soft); font-size:0.82rem; margin-top:8px; }
+
+  @media (max-width:860px){
+    .layout{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="site">
+      <h1>레인 대시</h1>
+      <p>떨어지는 장애물을 피해 30초를 버티는 짧은 피하기 게임입니다.</p>
+    </header>
+
+    <div class="layout">
+      <div class="stage">
+        <div class="stage-canvas-wrap">
+          <canvas id="game-canvas" width="600" height="600" tabindex="0" aria-label="게임 화면"></canvas>
+          <div class="flash-layer" id="flash-layer" aria-hidden="true"></div>
+        </div>
+
+        <div class="hud">
+          <div class="hud-chip" id="state-chip">
+            상태
+            <strong id="state-text">대기 중</strong>
+          </div>
+          <div class="hud-chip">
+            생존 시간
+            <strong id="timer-text">0.0초 / 30초</strong>
+          </div>
+          <div class="hud-chip">
+            최고 기록
+            <strong id="best-text">0.0초</strong>
+          </div>
+          <div class="hud-chip">
+            난이도(낙하 속도)
+            <strong id="difficulty-text">5</strong>
+          </div>
+        </div>
+
+        <div class="controls-row">
+          <button class="btn btn-solid" id="btn-start" type="button">시작 (Enter)</button>
+          <button class="btn" id="btn-pause" type="button">일시정지 (Space)</button>
+          <button class="btn btn-lane" id="btn-left" type="button" aria-label="왼쪽 이동">◀</button>
+          <button class="btn btn-lane" id="btn-right" type="button" aria-label="오른쪽 이동">▶</button>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="panel">
+          <h2>게임 규칙</h2>
+          <ul>
+            <li>플레이어는 5개 차선 중 한 곳에 있습니다.</li>
+            <li>위에서 떨어지는 장애물에 닿지 않고 30초를 버티면 <strong style="color:var(--good)">성공</strong>입니다.</li>
+            <li>장애물에 부딪히면 즉시 <strong style="color:var(--bad)">실패</strong>합니다.</li>
+          </ul>
+        </div>
+
+        <div class="panel">
+          <h2>조작법</h2>
+          <ul>
+            <li>← / → 또는 화면의 ◀ ▶ 버튼 : 차선 이동 (한 번 입력 = 한 칸 이동)</li>
+            <li>Space : 일시정지 / 재개</li>
+            <li>Enter 또는 "시작" 버튼 : 시작 / 다시 시작</li>
+          </ul>
+        </div>
+
+        <div class="panel">
+          <h2>난이도 설정</h2>
+          <p>바뀌는 값은 낙하 속도 하나뿐입니다. 라운드 진행 중에는 바꿀 수 없습니다.</p>
+          <div class="field-row">
+            <label for="difficulty-range">낙하 속도 (1~10)</label>
+            <input type="range" id="difficulty-range" min="1" max="10" step="1" value="5" />
+          </div>
+          <div class="field-row">
+            <label for="mute-toggle">효과음 끄기</label>
+            <input type="checkbox" id="mute-toggle" />
+          </div>
+          <div class="field-row">
+            <label for="reduced-motion-toggle">화면 깜빡임 줄이기</label>
+            <input type="checkbox" id="reduced-motion-toggle" />
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>플레이 기록 <span id="records-count" style="color:var(--ink-soft); font-weight:500;"></span></h2>
+          <div class="records-wrap">
+            <table class="records" id="records-table" hidden>
+              <thead>
+                <tr><th>#</th><th>시각</th><th>난이도</th><th>결과</th><th>생존(초)</th></tr>
+              </thead>
+              <tbody id="records-body"></tbody>
+            </table>
+            <p class="records-empty" id="records-empty">아직 기록이 없습니다. 한 판을 끝내면 여기 쌓입니다.</p>
+          </div>
+          <div class="controls-row">
+            <button class="btn" id="btn-clear-records" type="button">기록 전체 지우기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    'use strict';
+
+    var SAVE_KEY = 'lane-dash-save-v1';
+    var LANES = 5;
+    var LOGICAL_SIZE = 600;
+    var LANE_WIDTH = LOGICAL_SIZE / LANES;
+    var PLAYER_W = 70, PLAYER_H = 26;
+    var OBSTACLE_W = 70, OBSTACLE_H = 26;
+    var SPAWN_INTERVAL_MS = 650;
+    var SURVIVAL_GOAL_S = 30;
+    var BASE_SPEED = 90;
+    var SPEED_PER_LEVEL = 28;
+
+    function defaultSave(){
+      return { difficulty: 5, muted: false, reducedMotion: false, bestTime: 0, records: [] };
+    }
+
+    function loadSave(){
+      var raw;
+      try{
+        raw = localStorage.getItem(SAVE_KEY);
+      }catch(err){
+        return defaultSave();
+      }
+      if(!raw) return defaultSave();
+      try{
+        var parsed = JSON.parse(raw);
+        var d = defaultSave();
+        if(typeof parsed === 'object' && parsed !== null){
+          if(typeof parsed.difficulty === 'number' && parsed.difficulty >= 1 && parsed.difficulty <= 10) d.difficulty = parsed.difficulty;
+          if(typeof parsed.muted === 'boolean') d.muted = parsed.muted;
+          if(typeof parsed.reducedMotion === 'boolean') d.reducedMotion = parsed.reducedMotion;
+          if(typeof parsed.bestTime === 'number' && isFinite(parsed.bestTime)) d.bestTime = parsed.bestTime;
+          if(Array.isArray(parsed.records)) d.records = parsed.records.filter(function(r){
+            return r && typeof r === 'object' && typeof r.difficulty === 'number' && typeof r.outcome === 'string';
+          });
+        }
+        return d;
+      }catch(err){
+        return defaultSave();
+      }
+    }
+
+    function save(){
+      try{
+        localStorage.setItem(SAVE_KEY, JSON.stringify({
+          difficulty: save_.difficulty,
+          muted: save_.muted,
+          reducedMotion: save_.reducedMotion,
+          bestTime: save_.bestTime,
+          records: save_.records.slice(-500)
+        }));
+      }catch(err){ /* storage unavailable — game keeps running without persistence */ }
+    }
+
+    var save_ = loadSave();
+
+    var canvas = document.getElementById('game-canvas');
+    var ctx = canvas.getContext('2d');
+    var flashLayer = document.getElementById('flash-layer');
+    var stateText = document.getElementById('state-text');
+    var stateChip = document.getElementById('state-chip');
+    var timerText = document.getElementById('timer-text');
+    var bestText = document.getElementById('best-text');
+    var difficultyText = document.getElementById('difficulty-text');
+    var difficultyRange = document.getElementById('difficulty-range');
+    var muteToggle = document.getElementById('mute-toggle');
+    var reducedMotionToggle = document.getElementById('reduced-motion-toggle');
+    var btnStart = document.getElementById('btn-start');
+    var btnPause = document.getElementById('btn-pause');
+    var btnLeft = document.getElementById('btn-left');
+    var btnRight = document.getElementById('btn-right');
+    var btnClearRecords = document.getElementById('btn-clear-records');
+    var recordsBody = document.getElementById('records-body');
+    var recordsTable = document.getElementById('records-table');
+    var recordsEmpty = document.getElementById('records-empty');
+    var recordsCount = document.getElementById('records-count');
+
+    var prefersReducedMotionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+
+    var state = 'ready';
+    var playerLane = Math.floor(LANES / 2);
+    var obstacles = [];
+    var elapsed = 0;
+    var spawnTimer = 0;
+    var lastTs = null;
+    var audioCtx = null;
+
+    function effectiveReducedMotion(){
+      return save_.reducedMotion || (prefersReducedMotionQuery && prefersReducedMotionQuery.matches);
+    }
+
+    function ensureAudio(){
+      if(audioCtx) return audioCtx;
+      var Ctor = window.AudioContext || window.webkitAudioContext;
+      if(!Ctor) return null;
+      audioCtx = new Ctor();
+      return audioCtx;
+    }
+
+    function beep(freq){
+      if(save_.muted) return;
+      var ctxA = ensureAudio();
+      if(!ctxA) return;
+      if(ctxA.state === 'suspended') ctxA.resume();
+      var osc = ctxA.createOscillator();
+      var gain = ctxA.createGain();
+      osc.type = 'square';
+      osc.frequency.value = freq;
+      gain.gain.value = 0.06;
+      osc.connect(gain);
+      gain.connect(ctxA.destination);
+      var now = ctxA.currentTime;
+      gain.gain.setValueAtTime(0.06, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+      osc.start(now);
+      osc.stop(now + 0.19);
+    }
+
+    function flash(kind){
+      if(effectiveReducedMotion()) return;
+      flashLayer.classList.remove('flash-fail', 'flash-success');
+      // force reflow so the animation restarts even if the same class was just used
+      void flashLayer.offsetWidth;
+      flashLayer.classList.add(kind === 'success' ? 'flash-success' : 'flash-fail');
+    }
+
+    function triggerEffect(kind){
+      if(kind === 'fail'){
+        flash('fail');
+        beep(180);
+      }else if(kind === 'success'){
+        flash('success');
+        beep(660);
+      }
+    }
+
+    function setState(next){
+      state = next;
+      stateChip.className = 'hud-chip state-' + next;
+      var labels = { ready:'대기 중', playing:'진행 중', paused:'일시정지', success:'성공!', fail:'실패' };
+      stateText.textContent = labels[next] || next;
+      btnPause.disabled = !(next === 'playing' || next === 'paused');
+      btnPause.textContent = next === 'paused' ? '재개 (Space)' : '일시정지 (Space)';
+      difficultyRange.disabled = (next === 'playing' || next === 'paused');
+    }
+
+    function currentSpeed(){
+      return BASE_SPEED + SPEED_PER_LEVEL * (save_.difficulty - 1);
+    }
+
+    function resetRound(){
+      playerLane = Math.floor(LANES / 2);
+      obstacles = [];
+      elapsed = 0;
+      spawnTimer = 0;
+      lastTs = null;
+      timerText.textContent = '0.0초 / ' + SURVIVAL_GOAL_S + '초';
+      render();
+    }
+
+    function startRound(){
+      if(state === 'playing' || state === 'paused') return;
+      resetRound();
+      setState('playing');
+    }
+
+    function togglePause(){
+      if(state === 'playing'){
+        setState('paused');
+      }else if(state === 'paused'){
+        lastTs = null;
+        setState('playing');
+      }
+    }
+
+    function movePlayer(dir){
+      if(state !== 'playing') return;
+      playerLane = Math.max(0, Math.min(LANES - 1, playerLane + dir));
+    }
+
+    function recordRound(outcome){
+      save_.records.push({
+        n: save_.records.length + 1,
+        time: new Date().toLocaleString('ko-KR'),
+        difficulty: save_.difficulty,
+        outcome: outcome,
+        survived: Math.round(elapsed * 10) / 10
+      });
+      if(save_.records.length > 500){
+        save_.records = save_.records.slice(-500);
+      }
+      if(outcome === 'success' && elapsed > save_.bestTime){
+        save_.bestTime = elapsed;
+      }
+      save();
+      renderRecords();
+      bestText.textContent = save_.bestTime.toFixed(1) + '초';
+    }
+
+    function fail(){
+      setState('fail');
+      recordRound('fail');
+      triggerEffect('fail');
+    }
+
+    function success(){
+      setState('success');
+      recordRound('success');
+      triggerEffect('success');
+    }
+
+    function spawnObstacle(){
+      var lane = Math.floor(Math.random() * LANES);
+      obstacles.push({ lane: lane, y: -OBSTACLE_H });
+    }
+
+    function update(dt){
+      if(state !== 'playing') return;
+      elapsed += dt;
+      spawnTimer += dt;
+      if(spawnTimer >= SPAWN_INTERVAL_MS / 1000){
+        spawnTimer = 0;
+        spawnObstacle();
+      }
+      var speed = currentSpeed();
+      for(var i = obstacles.length - 1; i >= 0; i--){
+        obstacles[i].y += speed * dt;
+        if(obstacles[i].y > LOGICAL_SIZE){
+          obstacles.splice(i, 1);
+        }
+      }
+
+      var playerY = LOGICAL_SIZE - PLAYER_H - 10;
+      for(var j = 0; j < obstacles.length; j++){
+        var ob = obstacles[j];
+        if(ob.lane !== playerLane) continue;
+        var obTop = ob.y, obBottom = ob.y + OBSTACLE_H;
+        var pTop = playerY, pBottom = playerY + PLAYER_H;
+        if(obBottom > pTop && obTop < pBottom){
+          fail();
+          return;
+        }
+      }
+
+      if(elapsed >= SURVIVAL_GOAL_S){
+        success();
+        return;
+      }
+
+      timerText.textContent = elapsed.toFixed(1) + '초 / ' + SURVIVAL_GOAL_S + '초';
+    }
+
+    function laneCenterX(lane){
+      return lane * LANE_WIDTH + LANE_WIDTH / 2;
+    }
+
+    function render(){
+      ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
+
+      ctx.strokeStyle = '#232D45';
+      ctx.lineWidth = 2;
+      for(var l = 1; l < LANES; l++){
+        var x = l * LANE_WIDTH;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, LOGICAL_SIZE);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = '#FF8A5C';
+      for(var i = 0; i < obstacles.length; i++){
+        var ob = obstacles[i];
+        var cx = laneCenterX(ob.lane);
+        ctx.fillRect(cx - OBSTACLE_W / 2, ob.y, OBSTACLE_W, OBSTACLE_H);
+      }
+
+      var playerY = LOGICAL_SIZE - PLAYER_H - 10;
+      var pcx = laneCenterX(playerLane);
+      ctx.fillStyle = '#4C9AFF';
+      ctx.fillRect(pcx - PLAYER_W / 2, playerY, PLAYER_W, PLAYER_H);
+    }
+
+    function loop(ts){
+      if(lastTs === null) lastTs = ts;
+      var dt = Math.min((ts - lastTs) / 1000, 0.05);
+      lastTs = ts;
+      update(dt);
+      render();
+      requestAnimationFrame(loop);
+    }
+
+    function renderRecords(){
+      var records = save_.records;
+      recordsCount.textContent = records.length ? '(' + records.length + '회)' : '';
+      if(!records.length){
+        recordsTable.hidden = true;
+        recordsEmpty.hidden = false;
+        return;
+      }
+      recordsTable.hidden = false;
+      recordsEmpty.hidden = true;
+      var recent = records.slice(-20).reverse();
+      var html = '';
+      for(var i = 0; i < recent.length; i++){
+        var r = recent[i];
+        var outcomeLabel = r.outcome === 'success' ? '성공' : '실패';
+        html += '<tr><td>' + r.n + '</td><td>' + r.time + '</td><td>' + r.difficulty + '</td><td>' + outcomeLabel + '</td><td>' + r.survived + '</td></tr>';
+      }
+      recordsBody.innerHTML = html;
+    }
+
+    function applySaveToUI(){
+      difficultyRange.value = String(save_.difficulty);
+      difficultyText.textContent = String(save_.difficulty);
+      muteToggle.checked = save_.muted;
+      reducedMotionToggle.checked = save_.reducedMotion;
+      bestText.textContent = save_.bestTime.toFixed(1) + '초';
+      renderRecords();
+    }
+
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'ArrowLeft'){
+        movePlayer(-1);
+        e.preventDefault();
+      }else if(e.key === 'ArrowRight'){
+        movePlayer(1);
+        e.preventDefault();
+      }else if(e.code === 'Space'){
+        e.preventDefault();
+        togglePause();
+      }else if(e.key === 'Enter'){
+        e.preventDefault();
+        startRound();
+      }
+    });
+
+    btnStart.addEventListener('click', startRound);
+    btnPause.addEventListener('click', togglePause);
+    btnLeft.addEventListener('click', function(){ movePlayer(-1); });
+    btnRight.addEventListener('click', function(){ movePlayer(1); });
+
+    difficultyRange.addEventListener('input', function(){
+      save_.difficulty = parseInt(difficultyRange.value, 10);
+      difficultyText.textContent = String(save_.difficulty);
+      save();
+    });
+    muteToggle.addEventListener('change', function(){
+      save_.muted = muteToggle.checked;
+      save();
+    });
+    reducedMotionToggle.addEventListener('change', function(){
+      save_.reducedMotion = reducedMotionToggle.checked;
+      if(save_.reducedMotion){
+        flashLayer.classList.remove('flash-fail', 'flash-success');
+      }
+      save();
+    });
+    btnClearRecords.addEventListener('click', function(){
+      save_.records = [];
+      save_.bestTime = 0;
+      save();
+      renderRecords();
+      bestText.textContent = '0.0초';
+    });
+
+    document.addEventListener('visibilitychange', function(){
+      if(document.hidden && state === 'playing'){
+        setState('paused');
+      }
+    });
+    window.addEventListener('blur', function(){
+      if(state === 'playing'){
+        setState('paused');
+      }
+    });
+
+    applySaveToUI();
+    setState('ready');
+    requestAnimationFrame(loop);
+  })();
+  </script>
+</body>
+</html>
