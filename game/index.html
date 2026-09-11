@@ -306,8 +306,13 @@
             </div>
           </div>
           <label class="toggle-box" for="mute-toggle">
-            <span class="toggle-label">효과음/배경음악 끄기</span>
+            <span class="toggle-label">효과음 끄기</span>
             <input type="checkbox" id="mute-toggle" class="toggle-input" />
+            <span class="toggle-state" aria-hidden="true"></span>
+          </label>
+          <label class="toggle-box" for="music-toggle">
+            <span class="toggle-label">배경음악 끄기</span>
+            <input type="checkbox" id="music-toggle" class="toggle-input" />
             <span class="toggle-state" aria-hidden="true"></span>
           </label>
           <label class="toggle-box" for="reduced-motion-toggle">
@@ -352,7 +357,7 @@
     var SPEED_PER_LEVEL = 28;
 
     function defaultSave(){
-      return { difficulty: 5, muted: false, reducedMotion: false, bestTime: 0, records: [] };
+      return { difficulty: 5, muted: false, musicMuted: false, reducedMotion: false, bestTime: 0, records: [] };
     }
 
     function loadSave(){
@@ -369,6 +374,7 @@
         if(typeof parsed === 'object' && parsed !== null){
           if(typeof parsed.difficulty === 'number' && parsed.difficulty >= 1 && parsed.difficulty <= 10) d.difficulty = parsed.difficulty;
           if(typeof parsed.muted === 'boolean') d.muted = parsed.muted;
+          if(typeof parsed.musicMuted === 'boolean') d.musicMuted = parsed.musicMuted;
           if(typeof parsed.reducedMotion === 'boolean') d.reducedMotion = parsed.reducedMotion;
           if(typeof parsed.bestTime === 'number' && isFinite(parsed.bestTime)) d.bestTime = parsed.bestTime;
           if(Array.isArray(parsed.records)) d.records = parsed.records.filter(function(r){
@@ -386,6 +392,7 @@
         localStorage.setItem(SAVE_KEY, JSON.stringify({
           difficulty: save_.difficulty,
           muted: save_.muted,
+          musicMuted: save_.musicMuted,
           reducedMotion: save_.reducedMotion,
           bestTime: save_.bestTime,
           records: save_.records.slice(-30)
@@ -407,6 +414,7 @@
     var btnDifficultyMinus = document.getElementById('difficulty-minus');
     var btnDifficultyPlus = document.getElementById('difficulty-plus');
     var muteToggle = document.getElementById('mute-toggle');
+    var musicToggle = document.getElementById('music-toggle');
     var reducedMotionToggle = document.getElementById('reduced-motion-toggle');
     var btnStart = document.getElementById('btn-start');
     var btnPause = document.getElementById('btn-pause');
@@ -440,8 +448,7 @@
       return audioCtx;
     }
 
-    function beep(freq, duration, gainVal){
-      if(save_.muted) return;
+    function playTone(freq, duration, gainVal){
       duration = duration || 0.18;
       gainVal = gainVal || 0.06;
       var ctxA = ensureAudio();
@@ -460,14 +467,20 @@
       osc.stop(now + duration + 0.02);
     }
 
+    function beep(freq, duration, gainVal){
+      if(save_.muted) return;
+      playTone(freq, duration, gainVal);
+    }
+
     var MUSIC_LOOP = [392, 392, 523, 392, 440, 392, 523, 466];
     var musicInterval = null;
     var musicStep = 0;
 
     function startMusic(){
-      if(save_.muted || musicInterval) return;
+      if(save_.musicMuted || musicInterval) return;
       musicInterval = setInterval(function(){
-        beep(MUSIC_LOOP[musicStep % MUSIC_LOOP.length], 0.12, 0.025);
+        if(save_.musicMuted) return;
+        playTone(MUSIC_LOOP[musicStep % MUSIC_LOOP.length], 0.12, 0.025);
         musicStep++;
       }, 220);
     }
@@ -676,6 +689,7 @@
       difficultyValue.textContent = String(save_.difficulty);
       difficultyText.textContent = String(save_.difficulty);
       muteToggle.checked = save_.muted;
+      musicToggle.checked = save_.musicMuted;
       reducedMotionToggle.checked = save_.reducedMotion;
       bestText.textContent = save_.bestTime.toFixed(1) + '초';
       renderRecords();
@@ -713,7 +727,11 @@
     btnDifficultyPlus.addEventListener('click', function(){ stepDifficulty(1); });
     muteToggle.addEventListener('change', function(){
       save_.muted = muteToggle.checked;
-      if(save_.muted){ stopMusic(); } else if(state === 'playing'){ startMusic(); }
+      save();
+    });
+    musicToggle.addEventListener('change', function(){
+      save_.musicMuted = musicToggle.checked;
+      if(save_.musicMuted){ stopMusic(); } else if(state === 'playing'){ startMusic(); }
       save();
     });
     reducedMotionToggle.addEventListener('change', function(){
