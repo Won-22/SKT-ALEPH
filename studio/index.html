@@ -96,6 +96,11 @@
           <button class="aspect-btn" id="aspect-9-16" type="button" aria-pressed="false">9:16</button>
         </div>
 
+        <div class="aspect-row" role="group" aria-label="이미지 맞춤 방식">
+          <button class="aspect-btn" id="fit-cover" type="button" aria-pressed="true">채우기(꽉참)</button>
+          <button class="aspect-btn" id="fit-contain" type="button" aria-pressed="false">맞춤(전체 보임)</button>
+        </div>
+
         <div class="file-row">
           <label class="btn" for="image-input">이미지 불러오기 (PNG·JPEG)</label>
           <input type="file" id="image-input" accept="image/png,image/jpeg" style="position:absolute; width:1px; height:1px; opacity:0;" />
@@ -146,19 +151,19 @@
 
         <div class="panel">
           <h2>예시 완성 이미지</h2>
-          <p style="font-size:0.8rem; color:var(--ink-soft); margin:0;">이 도구로 직접 만든 예시 3장입니다.</p>
+          <p style="font-size:0.8rem; color:var(--ink-soft); margin:0;">이 도구로 직접 만든 예시 3장입니다. 로고 이미지는 수업(ALEPH × SK telecom)에서 제공받아 사용했습니다.</p>
           <div class="samples" id="samples">
             <div class="sample-card">
               <img src="samples/sample-1-1x1.png" alt="예시 카드 1 (1:1)" />
-              <p>1:1 · 본인 제작</p>
+              <p>1:1 · 수업 제공 이미지 활용</p>
             </div>
             <div class="sample-card">
               <img src="samples/sample-2-4x5.png" alt="예시 카드 2 (4:5)" />
-              <p>4:5 · 본인 제작</p>
+              <p>4:5 · 수업 제공 이미지 활용</p>
             </div>
             <div class="sample-card">
               <img src="samples/sample-3-9x16.png" alt="예시 카드 3 (9:16)" />
-              <p>9:16 · 본인 제작</p>
+              <p>9:16 · 수업 제공 이미지 활용</p>
             </div>
           </div>
         </div>
@@ -201,9 +206,14 @@
       '4:5': document.getElementById('aspect-4-5'),
       '9:16': document.getElementById('aspect-9-16')
     };
+    var fitBtns = {
+      cover: document.getElementById('fit-cover'),
+      contain: document.getElementById('fit-contain')
+    };
 
     var state = {
       aspect: '1:1',
+      fitMode: 'cover',
       imgEl: null,
       imageDataURL: null,
       text: textInput.value,
@@ -334,6 +344,24 @@
       c.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
     }
 
+    function drawContainImage(c, img, dx, dy, dw, dh){
+      c.fillStyle = '#FFFFFF';
+      c.fillRect(dx, dy, dw, dh);
+      var ir = img.width / img.height;
+      var tr = dw / dh;
+      var w, h;
+      if(ir > tr){
+        w = dw;
+        h = dw / ir;
+      }else{
+        h = dh;
+        w = dh * ir;
+      }
+      var x = dx + (dw - w) / 2;
+      var y = dy + (dh - h) / 2;
+      c.drawImage(img, x, y, w, h);
+    }
+
     function render(){
       var dims = ASPECTS[state.aspect];
       canvas.width = dims.w;
@@ -341,7 +369,11 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       if(state.imgEl){
-        drawCoverImage(ctx, state.imgEl, 0, 0, canvas.width, canvas.height);
+        if(state.fitMode === 'contain'){
+          drawContainImage(ctx, state.imgEl, 0, 0, canvas.width, canvas.height);
+        }else{
+          drawCoverImage(ctx, state.imgEl, 0, 0, canvas.width, canvas.height);
+        }
       }else{
         ctx.fillStyle = '#E1E4F7';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -381,6 +413,14 @@
       state.aspect = key;
       Object.keys(aspectBtns).forEach(function(k){
         aspectBtns[k].setAttribute('aria-pressed', String(k === key));
+      });
+      render();
+    }
+
+    function setFitMode(mode){
+      state.fitMode = mode;
+      Object.keys(fitBtns).forEach(function(k){
+        fitBtns[k].setAttribute('aria-pressed', String(k === mode));
       });
       render();
     }
@@ -430,6 +470,7 @@
       return {
         name: name,
         aspect: state.aspect,
+        fitMode: state.fitMode,
         text: state.text,
         x: state.x,
         y: state.y,
@@ -448,6 +489,7 @@
 
     function loadTemplate(tpl){
       state.aspect = tpl.aspect;
+      state.fitMode = (tpl.fitMode === 'contain') ? 'contain' : 'cover';
       state.text = tpl.text;
       state.x = tpl.x;
       state.y = tpl.y;
@@ -462,6 +504,9 @@
       colorInput.value = tpl.color;
       Object.keys(aspectBtns).forEach(function(k){
         aspectBtns[k].setAttribute('aria-pressed', String(k === tpl.aspect));
+      });
+      Object.keys(fitBtns).forEach(function(k){
+        fitBtns[k].setAttribute('aria-pressed', String(k === state.fitMode));
       });
       if(tpl.imageDataURL){
         var img = new Image();
@@ -559,6 +604,9 @@
     btnDownload.addEventListener('click', downloadCanvas);
     Object.keys(aspectBtns).forEach(function(key){
       aspectBtns[key].addEventListener('click', function(){ setAspect(key); });
+    });
+    Object.keys(fitBtns).forEach(function(key){
+      fitBtns[key].addEventListener('click', function(){ setFitMode(key); });
     });
 
     textInput.addEventListener('input', function(){ state.text = textInput.value; render(); });
