@@ -267,7 +267,7 @@
             <input type="range" id="difficulty-range" min="1" max="10" step="1" value="5" />
           </div>
           <div class="field-row">
-            <label for="mute-toggle">효과음 끄기</label>
+            <label for="mute-toggle">효과음/배경음악 끄기</label>
             <input type="checkbox" id="mute-toggle" />
           </div>
           <div class="field-row">
@@ -397,8 +397,10 @@
       return audioCtx;
     }
 
-    function beep(freq){
+    function beep(freq, duration, gainVal){
       if(save_.muted) return;
+      duration = duration || 0.18;
+      gainVal = gainVal || 0.06;
       var ctxA = ensureAudio();
       if(!ctxA) return;
       if(ctxA.state === 'suspended') ctxA.resume();
@@ -406,14 +408,29 @@
       var gain = ctxA.createGain();
       osc.type = 'square';
       osc.frequency.value = freq;
-      gain.gain.value = 0.06;
       osc.connect(gain);
       gain.connect(ctxA.destination);
       var now = ctxA.currentTime;
-      gain.gain.setValueAtTime(0.06, now);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+      gain.gain.setValueAtTime(gainVal, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration + 0.01);
       osc.start(now);
-      osc.stop(now + 0.19);
+      osc.stop(now + duration + 0.02);
+    }
+
+    var MUSIC_LOOP = [392, 392, 523, 392, 440, 392, 523, 466];
+    var musicInterval = null;
+    var musicStep = 0;
+
+    function startMusic(){
+      if(save_.muted || musicInterval) return;
+      musicInterval = setInterval(function(){
+        beep(MUSIC_LOOP[musicStep % MUSIC_LOOP.length], 0.12, 0.025);
+        musicStep++;
+      }, 220);
+    }
+
+    function stopMusic(){
+      if(musicInterval){ clearInterval(musicInterval); musicInterval = null; }
     }
 
     function flash(kind){
@@ -442,6 +459,7 @@
       btnPause.disabled = !(next === 'playing' || next === 'paused');
       btnPause.textContent = next === 'paused' ? '재개 (Space)' : '일시정지 (Space)';
       difficultyRange.disabled = (next === 'playing' || next === 'paused');
+      if(next === 'playing') startMusic(); else stopMusic();
     }
 
     function currentSpeed(){
@@ -646,6 +664,7 @@
     });
     muteToggle.addEventListener('change', function(){
       save_.muted = muteToggle.checked;
+      if(save_.muted){ stopMusic(); } else if(state === 'playing'){ startMusic(); }
       save();
     });
     reducedMotionToggle.addEventListener('change', function(){
