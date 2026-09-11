@@ -7,16 +7,18 @@
 <meta name="description" content="5개 차선에서 떨어지는 장애물을 피하는 짧은 브라우저 게임" />
 <style>
   :root{
-    --bg:#0F1420;
-    --surface:#171E2E;
-    --surface-alt:#1E2740;
-    --ink:#EDF1F8;
-    --ink-soft:#9AA5BD;
-    --accent:#4C9AFF;
-    --accent-ink:#04122B;
-    --border:#2B354D;
-    --good:#2ECC71;
-    --bad:#FF5C5C;
+    --bg:#F5F6FF;
+    --surface:#FFFFFF;
+    --surface-alt:#EEF0FF;
+    --ink:#181B2E;
+    --ink-soft:#5C6079;
+    --accent:#6C4CFF;
+    --accent-dark:#5638E0;
+    --accent-ink:#FFFFFF;
+    --border:#E1E4F7;
+    --good:#0B7A3B;
+    --bad:#C41E4C;
+    --paused:#A15C00;
     --radius:14px;
     --maxw:1040px;
     font-family:-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", "Malgun Gothic", "Noto Sans KR", sans-serif;
@@ -74,7 +76,7 @@
     height:100%;
     display:block;
     border-radius:10px;
-    background:#0B0F19;
+    background:#FAFAFF;
     touch-action:none;
   }
   .flash-layer{
@@ -118,7 +120,7 @@
   .hud-chip.state-playing strong{ color:var(--accent); }
   .hud-chip.state-success strong{ color:var(--good); }
   .hud-chip.state-fail strong{ color:var(--bad); }
-  .hud-chip.state-paused strong{ color:#F5B841; }
+  .hud-chip.state-paused strong{ color:var(--paused); }
 
   .controls-row{
     display:flex;
@@ -142,8 +144,8 @@
   }
   .btn:hover{ border-color:var(--accent); color:var(--accent); }
   .btn-solid{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
-  .btn-solid:hover{ background:#3D86EE; color:var(--accent-ink); }
-  .btn-lane{ width:44px; padding:9px 0; text-align:center; font-size:1.1rem; }
+  .btn-solid:hover{ background:var(--accent-dark); color:var(--accent-ink); }
+  .btn-lane{ width:44px; padding:9px 0; justify-content:center; font-size:1.1rem; }
   .btn:disabled{ opacity:.4; cursor:not-allowed; }
 
   .panel{
@@ -618,7 +620,7 @@
     function render(){
       ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
 
-      ctx.strokeStyle = '#232D45';
+      ctx.strokeStyle = '#DADFF5';
       ctx.lineWidth = 2;
       for(var l = 1; l < LANES; l++){
         var x = l * LANE_WIDTH;
@@ -628,7 +630,7 @@
         ctx.stroke();
       }
 
-      ctx.fillStyle = '#FF8A5C';
+      ctx.fillStyle = '#FF6B4A';
       for(var i = 0; i < obstacles.length; i++){
         var ob = obstacles[i];
         var cx = laneCenterX(ob.lane);
@@ -637,7 +639,7 @@
 
       var playerY = LOGICAL_SIZE - PLAYER_H - 10;
       var pcx = laneCenterX(playerLane);
-      ctx.fillStyle = '#4C9AFF';
+      ctx.fillStyle = '#6C4CFF';
       ctx.fillRect(pcx - PLAYER_W / 2, playerY, PLAYER_W, PLAYER_H);
     }
 
