@@ -52,7 +52,7 @@
 <body>
 <div class="wrap">
   <h1>오늘의 진짜 정보판</h1>
-  <p class="lead">비개인 공개 원천(Open-Meteo)에서 서울 기온을 조회해 값·단위·출처·시각을 정직하게 보여줍니다. 데이터가 오지 않을 때는 마지막 정상값을 보존하고 이유를 표시합니다. 위치정보나 개인정보는 사용하지 않습니다.</p>
+  <p class="lead">비개인 공개 원천(Open-Meteo)에서 대전 기온을 조회해 값·단위·출처·시각을 정직하게 보여줍니다. 데이터가 오지 않을 때는 마지막 정상값을 보존하고 이유를 표시합니다. 위치정보나 개인정보는 사용하지 않습니다.</p>
 
   <div class="card">
     <h2>① 실제 데이터판</h2>
@@ -207,8 +207,8 @@ function runFixture(inputState, fixture){
 }
 
 /* ---- 실제 데이터판 ---- */
-var SIGNAL_ID = 'seoul-temp-2m';
-var SOURCE_URL = 'https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&current=temperature_2m&timezone=UTC';
+var SIGNAL_ID = 'daejeon-temp-2m';
+var SOURCE_URL = 'https://api.open-meteo.com/v1/forecast?latitude=36.3504&longitude=127.3845&current=temperature_2m&timezone=UTC';
 var LIVE_KEY = 'aleph_t04_live_v1';
 
 var liveState = loadLive();
@@ -248,7 +248,7 @@ async function fetchLive(){
         var sourceTime = new Date(timeRaw + 'Z').toISOString();
         var reading = {
           signal_id: SIGNAL_ID, normalized_value: tempRaw, unit: '°C',
-          source_name: 'Open-Meteo 서울 기온', source_url: SOURCE_URL,
+          source_name: 'Open-Meteo 대전 기온', source_url: SOURCE_URL,
           source_time: sourceTime, fetched_at: fetchedAt,
           record_timezone: 'Asia/Seoul', record_date: kstDate(fetchedAt)
         };
@@ -302,7 +302,7 @@ function renderLive(){
 
   var tbody = document.querySelector('#live-table tbody');
   tbody.innerHTML = '';
-  var rows = liveState.daily_readings.slice().sort(function(a,b){ return b.record_date.localeCompare(a.record_date); });
+  var rows = liveState.daily_readings.filter(function(r){ return r.signal_id === SIGNAL_ID; }).sort(function(a,b){ return b.record_date.localeCompare(a.record_date); });
   document.getElementById('live-table-empty').style.display = rows.length ? 'none' : 'block';
   rows.forEach(function(r){
     var tr = document.createElement('tr');
