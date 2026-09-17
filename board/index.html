@@ -98,12 +98,21 @@
   .note{font-size:12.5px; color:var(--sub); margin-top:10px;}
   .hint{font-size:12px; color:var(--sub); margin:-4px 0 14px;}
   .ghost{background:transparent; border-color:var(--line); color:var(--sub);}
+
+  .warn-banner{display:flex; align-items:flex-start; gap:10px; background:#fdecea; border:1px solid #f3c2bd; color:#9c2b1f; border-radius:14px; padding:14px 16px; margin-bottom:16px; font-size:13px; line-height:1.5;}
+  .warn-banner[hidden]{display:none;}
+  .warn-banner svg{flex:0 0 auto; margin-top:1px;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>오늘의 진짜 정보판</h1>
   <p class="lead">비개인 공개 원천(Open-Meteo)에서 대전 기온을 조회해 값·단위·출처·시각을 정직하게 보여줍니다. 데이터가 오지 않을 때는 마지막 정상값을 보존하고 이유를 표시합니다. 위치정보나 개인정보는 사용하지 않습니다.</p>
+
+  <div class="warn-banner" id="privacy-warn" hidden>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span>이 창은 시크릿(프라이빗) 모드로 보입니다. 지금 조회한 기록은 이 창을 닫으면 사라집니다 — 기록을 이어가려면 일반 창으로 다시 열어 접속해주세요.</span>
+  </div>
 
   <div class="card hero">
     <div class="hero-top">
@@ -392,6 +401,15 @@ function renderLive(){
 document.getElementById('btn-fetch').addEventListener('click', fetchLive);
 document.getElementById('btn-retry').addEventListener('click', fetchLive);
 renderLive();
+
+(function checkPrivateMode(){
+  try{
+    localStorage.setItem('__t04_probe__', '1');
+    localStorage.removeItem('__t04_probe__');
+  } catch(e){
+    document.getElementById('privacy-warn').hidden = false;
+  }
+})();
 
 /* ---- 합성 재생 (채점용) ---- */
 var REPLAY_KEY = 'aleph_t04_replay_v1';
