@@ -156,6 +156,12 @@
     </div>
     <div class="day-list" id="live-table"></div>
     <div class="empty" id="live-table-empty">아직 저장된 일별 기록이 없습니다.</div>
+    <div class="row-actions" style="margin-top:14px;">
+      <button class="ghost" id="btn-export">기록 내보내기</button>
+      <button class="ghost" id="btn-import">기록 가져오기</button>
+      <input type="file" id="import-file" accept="application/json" hidden>
+    </div>
+    <p class="note" id="import-result"></p>
   </div>
 
   <div class="card tool">
@@ -232,7 +238,7 @@ function comparisonFor(rows, current){
   var previous = candidates[0];
   if(!previous) return { state:'insufficient', direction:null, magnitude:null, unit:null };
   if(previous.unit !== current.unit) return { state:'unit_mismatch', direction:null, magnitude:null, unit:null };
-  var signed = current.normalized_value - previous.normalized_value;
+  var signed = Math.round((current.normalized_value - previous.normalized_value) * 100) / 100;
   return {
     state:'comparable',
     direction: signed > 0 ? 'increase' : (signed < 0 ? 'decrease' : 'unchanged'),
@@ -401,6 +407,54 @@ function renderLive(){
 document.getElementById('btn-fetch').addEventListener('click', fetchLive);
 document.getElementById('btn-retry').addEventListener('click', fetchLive);
 renderLive();
+
+function importReadings(importedReadings){
+  var pool = liveState.daily_readings.map(function(r){ return r.reading; }).concat(importedReadings || []);
+  pool = pool.filter(function(r){ return r && r.signal_id === SIGNAL_ID; });
+  pool.sort(function(a,b){ return String(a.record_date).localeCompare(b.record_date) || String(a.fetched_at).localeCompare(b.fetched_at); });
+  var rebuilt = resetEvaluationState();
+  var applied = 0, skipped = 0;
+  pool.forEach(function(reading){
+    try{ rebuilt = applySuccessfulReading(rebuilt, reading, {virtual_now: reading.fetched_at}); applied++; }
+    catch(e){ skipped++; }
+  });
+  liveState = rebuilt;
+  saveLive(); renderLive();
+  return { applied: applied, skipped: skipped };
+}
+
+document.getElementById('btn-export').addEventListener('click', function(){
+  var readings = liveState.daily_readings.map(function(r){ return r.reading; });
+  var blob = new Blob([JSON.stringify(readings, null, 2)], { type:'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'daejeon-temp-readings.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('btn-import').addEventListener('click', function(){
+  document.getElementById('import-file').click();
+});
+
+document.getElementById('import-file').addEventListener('change', function(e){
+  var file = e.target.files[0];
+  var resultEl = document.getElementById('import-result');
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(){
+    try{
+      var data = JSON.parse(reader.result);
+      if(!Array.isArray(data)) throw new Error('array expected');
+      var result = importReadings(data);
+      resultEl.textContent = '가져오기 완료: ' + result.applied + '건 반영' + (result.skipped ? ', ' + result.skipped + '건은 형식이 달라 건너뜀' : '');
+    } catch(err){
+      resultEl.textContent = '가져오기 실패: JSON 파일 형식을 확인해주세요.';
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
 
 (function checkPrivateMode(){
   try{
