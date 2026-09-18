@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>대화가 끊겨도 이어지는 프로젝트 — 인수인계 비교 보고서</title>
+<style>
+  :root{
+    --bg:#F5F6FF; --surface:#FFFFFF; --ink:#181B2E; --sub:#5C6079; --border:#E1E4F7;
+    --accent:#6C4CFF; --good:#0B7A3B; --bad:#C41E4C; --pending:#8A6D00; --pending-bg:#FFF6DE;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif; line-height:1.6; padding:24px 16px 60px;}
+  .wrap{max-width:900px; margin:0 auto;}
+  h1{font-size:1.35rem; margin:0 0 6px;}
+  .lead{color:var(--sub); font-size:0.9rem; margin:0 0 22px;}
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:18px;}
+  .card h2{font-size:1.02rem; margin:0 0 12px;}
+  table{width:100%; border-collapse:collapse; font-size:0.82rem;}
+  th,td{text-align:left; padding:8px 6px; border-bottom:1px solid var(--border); vertical-align:top;}
+  th{color:var(--sub); font-weight:700; font-size:0.75rem; text-transform:uppercase;}
+  .cap-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  @media (max-width:560px){ .cap-grid{grid-template-columns:1fr;} }
+  .cap{background:#F7F8FF; border:1px solid var(--border); border-radius:10px; padding:12px 14px;}
+  .cap .n{font-size:1.3rem; font-weight:800;}
+  .cap .l{font-size:0.78rem; color:var(--sub);}
+  .timeline{list-style:none; margin:0; padding:0;}
+  .timeline li{border-left:3px solid var(--border); padding:4px 0 14px 14px; margin-left:4px; font-size:0.85rem;}
+  .timeline li.done{border-left-color:var(--good);}
+  .timeline li.pending{border-left-color:var(--pending);}
+  .timeline .t{font-weight:700;}
+  .timeline .m{color:var(--sub); font-size:0.78rem;}
+  .badge{display:inline-block; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:999px; margin-left:6px;}
+  .badge.done{background:#E8F6EC; color:var(--good);}
+  .badge.pending{background:var(--pending-bg); color:var(--pending);}
+  .handoff-grid{display:grid; grid-template-columns:1fr; gap:10px;}
+  .handoff-item{background:#F7F8FF; border:1px solid var(--border); border-radius:10px; padding:10px 14px;}
+  .handoff-item .k{font-weight:700; font-size:0.82rem; margin-bottom:4px;}
+  .handoff-item .v{font-size:0.85rem; white-space:pre-wrap;}
+  code{background:#F0F1FA; padding:1px 6px; border-radius:5px; font-size:0.85em;}
+  .note{font-size:0.78rem; color:var(--sub); margin-top:10px;}
+  .pending-text{color:var(--pending); font-style:normal;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>대화가 끊겨도 이어지는 프로젝트 — 인수인계 비교 보고서</h1>
+  <p class="lead">과제3(짤·카드 스튜디오)에 4:3 화면비를 추가하는 작은 개선을, AI A(Claude)가 시작해서 계획된 지점에 멈추고, AI B(ChatGPT)가 저장소와 이 문서만으로 이어받아 완성하는 과정을 기록합니다. 대화 전문은 포함하지 않습니다.</p>
+
+  <div class="card">
+    <h2>고정 검사 10개 (작업 시작 전 확정)</h2>
+    <table>
+      <thead><tr><th>ID</th><th>입력</th><th>관찰 가능한 기대값</th></tr></thead>
+      <tbody>
+        <tr><td>T05-T01</td><td>편집 화면 로드</td><td>화면비 선택 영역에 버튼 4개, 그 중 하나의 라벨이 "4:3"</td></tr>
+        <tr><td>T05-T02</td><td>"4:3" 버튼 클릭</td><td>canvas.width===1080, canvas.height===810</td></tr>
+        <tr><td>T05-T03</td><td>"4:3" 클릭</td><td>4:3 버튼만 aria-pressed="true", 나머지 3개는 "false"</td></tr>
+        <tr><td>T05-T04</td><td>4:3 선택 + 이미지 업로드(채우기 모드)</td><td>캔버스 전체가 이미지로 채워짐, 레터박스 없음</td></tr>
+        <tr><td>T05-T05</td><td>4:3 선택 + 맞춤 모드 + 가로가 2:1 이상인 와이드 이미지 업로드</td><td>상하로 흰 여백(레터박스) 발생, 이미지 잘림 없음</td></tr>
+        <tr><td>T05-T06</td><td>4:3 선택 + 문구 입력 + 위치 50/50</td><td>캔버스 중앙 부근에 문구가 잘리지 않고 렌더링</td></tr>
+        <tr><td>T05-T07</td><td>4:3 상태에서 템플릿 저장</td><td>localStorage 템플릿 객체의 aspect === "4:3"</td></tr>
+        <tr><td>T05-T08</td><td>저장된 4:3 템플릿 불러오기</td><td>canvas가 1080×810으로 복원, "4:3" 버튼 active</td></tr>
+        <tr><td>T05-T09</td><td>4:3 상태에서 PNG 내보내기</td><td>다운로드된 PNG의 실제 해상도가 1080×810</td></tr>
+        <tr><td>T05-T10</td><td>4:3 → 9:16 → 4:3 순서로 전환</td><td>최종 canvas 1080×810, 기존 1:1/4:5/9:16도 각각 정상 크기(회귀 없음)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>AI A·AI B 공통 사용 상한</h2>
+    <div class="cap-grid">
+      <div class="cap"><div class="n">20분</div><div class="l">1인당 실제 작업시간 상한</div></div>
+      <div class="cap"><div class="n">12회</div><div class="l">1인당 요청/호출(왕복) 수 상한</div></div>
+    </div>
+    <p class="note">두 상한 모두 AI A 작업을 시작하기 전에 정했고, AI A·AI B 동일하게 적용합니다.</p>
+  </div>
+
+  <div class="card">
+    <h2>작업 타임라인</h2>
+    <ol class="timeline">
+      <li class="done"><span class="t">AI A 시작</span><span class="badge done">완료</span><div class="m">소스 버전 <code>d7ed1534f5bebb46ac744563f9ce3b80699c3e24</code></div></li>
+      <li class="done"><span class="t">AI A 종료 · 인수인계</span><span class="badge done">완료</span><div class="m">2026-09-18T14:42:41+09:00 · 소스 버전 <code>5e7b2b09f3112f098377ad91c97e9d608a7de654</code> · 호출 9회 · 통과 검사 1/10(T05-T02만 확인)</div></li>
+      <li class="pending"><span class="t">AI B 시작</span><span class="badge pending">대기</span><div class="m pending-text">ChatGPT에 저장소 주소와 아래 인수인계 문서 전달 예정</div></li>
+      <li class="pending"><span class="t">AI B 완료</span><span class="badge pending">대기</span><div class="m pending-text">-</div></li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>인수인계 문서 (7항목)</h2>
+    <div class="handoff-grid">
+      <div class="handoff-item"><div class="k">① 목표</div><div class="v">studio/index.html(짤·카드 스튜디오)에 기존 1:1·4:5·9:16 화면비에 더해 4:3 화면비를 추가한다. 캔버스 렌더링·템플릿 저장/불러오기·PNG 내보내기 전부에서 4:3이 정상 동작해야 한다.</div></div>
+      <div class="handoff-item"><div class="k">② 현재 상태</div><div class="v">ASPECTS 객체에 '4:3':{w:1080,h:810} 추가됨. HTML에 id="aspect-4-3" 버튼 추가됨. aspectBtns 객체에 '4:3' 키 연결됨. 버튼 클릭 시 캔버스가 1080×810으로 바뀌는 것(T05-T02)만 확인함. 상단 소개 문구는 아직 "1:1·4:5·9:16"만 언급하도록 남아있음(수정 안 함).</div></div>
+      <div class="handoff-item"><div class="k">③ 실행 명령</div><div class="v">빌드 없는 정적 파일. studio/ 폴더를 정적 서버로 띄워 확인할 것 (예: npx serve studio, 또는 python -m http.server --directory studio). localStorage를 쓰므로 file://로 직접 열면 템플릿 저장이 동작하지 않을 수 있음 — 반드시 http(s)://로 접속해서 확인할 것. 저장소: https://github.com/Won-22/SKT-ALEPH (commit 5e7b2b09f3112f098377ad91c97e9d608a7de654)</div></div>
+      <div class="handoff-item"><div class="k">④ 통과 검사</div><div class="v">T05-T02만 확인함(캔버스 1080×810 정상). 나머지 T05-T01, T05-T03~T05-T10은 미확인.</div></div>
+      <div class="handoff-item"><div class="k">⑤ 남은 문제</div><div class="v">T05-T01, T05-T03~T05-T10 전부 미확인 상태. 특히 템플릿 저장/불러오기(T07·T08), PNG 내보내기 실제 해상도(T09), 비율 왕복 전환 회귀(T10)는 실제로 눌러서 확인이 필요함. 상단 소개 문구(studio/index.html의 &lt;header&gt; 안 &lt;p&gt;)가 아직 4:3을 언급하지 않음.</div></div>
+      <div class="handoff-item"><div class="k">⑥ 다음 행동</div><div class="v">10개 고정 검사를 전부 실제 클릭/조작으로 확인하고, 실패하는 게 있으면 원인을 찾아 고칠 것. 소개 문구도 4:3을 포함하도록 한 줄 수정할 것. 전부 통과하면 완료로 표시하고 커밋할 것.</div></div>
+      <div class="handoff-item"><div class="k">⑦ 건드리지 말 것</div><div class="v">기존 1:1/4:5/9:16의 크기값과 동작, drawCoverImage/drawContainImage 함수 내부 로직, 템플릿 스키마(TPL_KEY, isValidTemplate의 필드 목록), 저장소의 다른 페이지(game/, board/, index.html, ledger.html). ASPECTS·aspectBtns·소개 문구 외의 구조 변경 금지.</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>이름을 가린 비교표</h2>
+    <table>
+      <thead><tr><th></th><th>작업시간</th><th>요청/호출 수</th><th>오류 회차</th><th>검사 통과 수</th></tr></thead>
+      <tbody>
+        <tr><td>작업자 A</td><td>20분 이내(정확한 초 단위 기록은 없음, 연속 1턴·9회 호출로 완료)</td><td>9회</td><td>10개 전체 실행 라운드 없음(부분 구현 단계)</td><td>1/10 (T05-T02만 확인)</td></tr>
+        <tr><td>작업자 B</td><td class="pending-text">대기</td><td class="pending-text">대기</td><td class="pending-text">대기</td><td class="pending-text">대기</td></tr>
+      </tbody>
+    </table>
+    <p class="note">작업자 A/B의 실제 모델·서비스 이름은 이 비교 구간에서 가렸습니다(A=Claude, B=ChatGPT — 판정에는 이름을 쓰지 않았습니다).</p>
+  </div>
+
+  <div class="card">
+    <h2>짧은 확인 방법 (4줄)</h2>
+    <div class="handoff-item"><div class="v">① 어디로 가나요: https://won-22.github.io/SKT-ALEPH/studio/
+② 3단계 이내 무엇을 하나요: 1) "4:3" 버튼 클릭 2) 이미지 업로드 3) PNG로 내려받기
+③ 무엇이 보이면 통과인가요: 캔버스가 1080×810 비율로 바뀌고, 이미지가 잘림 없이 꽉 차며, 내려받은 PNG도 같은 비율
+④ 안 될 때 무엇이 보이나요: 캔버스 크기가 안 바뀌거나, 4:3 버튼이 눌린 상태로 안 바뀌거나, 내려받은 PNG 비율이 다름</div></div>
+  </div>
+
+  <div class="card">
+    <h2>AI와 나의 판단 (3줄)</h2>
+    <div class="handoff-item"><div class="v" id="ai-judgment">이 항목은 AI B(ChatGPT) 작업 완료 후 최종 정리합니다. <span class="pending-text">(대기)</span></div></div>
+  </div>
+
+  <p class="note">※ 이 보고서는 AI A 단계까지 작성된 진행 중 버전입니다. AI B(ChatGPT)가 저장소와 인수인계 문서만으로 작업을 완료하면 타임라인·비교표·확인방법·AI판단 항목을 채워 최종본으로 갱신합니다.</p>
+</div>
+</body>
+</html>
