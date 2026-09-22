@@ -2,6 +2,8 @@
   "name": "pds-diary",
   "main": "src/worker.js",
   "compatibility_date": "2025-09-01",
+  "workers_dev": true,
+  "preview_urls": false,
   "assets": {
     "directory": "./public"
   },
@@ -9,7 +11,7 @@
     {
       "binding": "DB",
       "database_name": "pds-diary",
-      "database_id": "00000000-0000-0000-0000-000000000000"
+      "database_id": "b321441c-5749-44c2-93fb-001a89dd42b9"
     }
   ]
 }

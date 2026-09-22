@@ -3,13 +3,17 @@ import fs from 'node:fs';
 import worker from '../src/worker.js';
 import { createD1 } from './d1-shim.mjs';
 
+// BASE_URL 을 주면 배포된 실서버(진짜 D1)에 HTTP 로 같은 검사를 돌린다. (실행 전 DB 가 비어 있어야 하고, 끝나면 비워야 한다)
+const BASE = process.env.BASE_URL;
+
 const schema = fs.readFileSync(new URL('../schema.sql', import.meta.url), 'utf8');
-const env = { DB: createD1(':memory:', schema) };
+const env = BASE ? null : { DB: createD1(':memory:', schema) };
 let pass = 0, fail = 0;
 const ok = (cond, name, extra = '') => { cond ? pass++ : fail++; console.log(`${cond ? 'PASS' : 'FAIL'}  ${name}${cond ? '' : '  ' + extra}`); };
 
 async function api(method, path, body) {
-  const r = await worker.fetch(new Request('http://x' + path, { method, headers: { 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) }), env);
+  const init = { method, headers: { 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) };
+  const r = BASE ? await fetch(BASE + path, init) : await worker.fetch(new Request('http://x' + path, init), env);
   const text = await r.text();
   let data; try { data = JSON.parse(text); } catch { data = text; }
   return { status: r.status, data };
@@ -66,17 +70,17 @@ ok(r.status === 200 && r.data.rows.length === 0, 'SQL 주입성 검색어는 글
 const [c1, c2] = await Promise.all([api('POST', `/api/todos/${t[1].id}/complete`), api('POST', `/api/todos/${t[1].id}/complete`)]);
 r = await api('GET', '/api/todos?status=done');
 ok(r.data.rows.length === 1 && r.data.rows[0].id === t[1].id, 'C11 완료로 바꾸기');
-const cnt = (await env.DB.prepare('SELECT COUNT(*) n FROM completions').first()).n;
+const cnt = (await api('GET', '/api/export')).data.completions.length;
 ok(cnt === 1, 'C21 동시에 두 번 눌러도 완료 기록 1건', String(cnt));
 ok([c1, c2].filter((x) => x.data.newly_completed).length === 1, 'C21 둘 중 하나만 새 완료로 응답');
 await api('POST', `/api/todos/${t[1].id}/complete`);
-ok((await env.DB.prepare('SELECT COUNT(*) n FROM completions').first()).n === 1, 'C21 순차로 또 눌러도 1건');
+ok((await api('GET', '/api/export')).data.completions.length === 1, 'C21 순차로 또 눌러도 1건');
 r = await api('GET', '/api/review?plan_id=1');
 ok(r.data.done === 1, 'C22 돌아보기 완료 수가 정확히 1');
 r = await api('POST', `/api/todos/${t[1].id}/reopen`);
-ok(r.data.todo.status === 'doing' && (await env.DB.prepare('SELECT COUNT(*) n FROM completions').first()).n === 0, 'C12 완료한 할 일을 진행 중으로 되돌림');
+ok(r.data.todo.status === 'doing' && (await api('GET', '/api/export')).data.completions.length === 0, 'C12 완료한 할 일을 진행 중으로 되돌림');
 await api('POST', `/api/todos/${t[1].id}/complete`);
-ok((await env.DB.prepare('SELECT COUNT(*) n FROM completions').first()).n === 1, '되돌린 뒤 다시 완료 가능(1건)');
+ok((await api('GET', '/api/export')).data.completions.length === 1, '되돌린 뒤 다시 완료 가능(1건)');
 
 // 실행 기록
 const run = (todo, s, e, blocked) => api('POST', '/api/runs', { todo_id: todo, started_at: s, ended_at: e, blocked_reason: blocked });
@@ -125,7 +129,7 @@ ok(r.data.title === evil && r.data.tags[0] === '<b>x</b>', 'C57 스크립트 모
 const back = await api('GET', '/api/todos?q=script');
 ok(back.data.rows[0].title === evil, 'C57 다시 읽어도 글자 그대로');
 r = await api('DELETE', `/api/todos/${t[2].id}`);
-ok(r.status === 200 && (await env.DB.prepare('SELECT COUNT(*) n FROM runs WHERE todo_id=?').bind(t[2].id).first()).n === 0, 'C13 할 일 삭제(딸린 기록도 함께 삭제)');
+ok(r.status === 200 && (await api('GET', '/api/runs?todo_id=' + t[2].id)).data.rows.length === 0, 'C13 할 일 삭제(딸린 기록도 함께 삭제)');
 ok((await api('GET', '/api/todos')).data.rows.every((x) => x.id !== t[2].id), '삭제한 할 일은 목록에서 사라짐');
 r = await api('GET', '/api/export');
 ok(r.status === 200 && r.data.plans.length === 3 && r.data.todos.length >= 5 && r.data.runs.length >= 1 && r.data.plan_revisions.length >= 4 && r.data.schema_version === 2, 'C36 전체 내보내기(계획·이력·할 일·태그·실행기록·완료)');
