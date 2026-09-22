@@ -1,0 +1,144 @@
+{
+  "schema_version": 2,
+  "name": "플랜두씨 다이어리 1 — 서버 데이터베이스 스키마",
+  "database": {
+    "engine": "Cloudflare D1 (SQLite)",
+    "ddl_file": "diary/schema.sql",
+    "binding": "DB",
+    "note": "DDL(schema.sql)이 정본이다. 이 문서는 표·항목·관계·날짜 규칙을 사람이 읽게 적은 것이며 scripts/check-schema.mjs 가 실제 스키마와 같은지 검사한다."
+  },
+  "date_rules": {
+    "date": "YYYY-MM-DD 는 Asia/Seoul 달력 날짜다 (period_start, period_end, due_date).",
+    "timestamp": "시각은 UTC ISO-8601(…Z)로 저장하고 화면에는 Asia/Seoul(KST)로 보여 준다 (created_at, updated_at, recorded_at, started_at, ended_at, completed_at).",
+    "entered_time": "실행 기록 입력 시각은 서울(KST) 기준으로 받아 UTC 로 바꿔 저장한다.",
+    "today": "지연 판정의 '오늘'은 서버가 계산한 Asia/Seoul 오늘 날짜다.",
+    "duration_unit": "시간 단위는 모두 분(minute)이다 (est_minutes, actual_minutes)."
+  },
+  "enums": {
+    "priority": { "1": "높음", "2": "보통", "3": "낮음" },
+    "todo_status_stored": ["todo", "doing"],
+    "todo_status_shown": ["todo", "doing", "done"],
+    "todo_status_note": "done 은 저장하지 않고 completions 행이 있으면 todo_view 가 done 으로 보여 준다."
+  },
+  "tables": [
+    {
+      "name": "plans",
+      "purpose": "계획의 지금 값. 고칠 때마다 갱신되고, 이전 값은 plan_revisions 에 남는다.",
+      "primary_key": ["id"],
+      "columns": [
+        { "name": "id", "type": "INTEGER", "nullable": false, "note": "AUTOINCREMENT, 화면에는 P-<id>" },
+        { "name": "title", "type": "TEXT", "nullable": false },
+        { "name": "period_start", "type": "TEXT", "nullable": false, "note": "시작일(서울 날짜)" },
+        { "name": "period_end", "type": "TEXT", "nullable": false, "note": "종료일(서울 날짜), period_start 이상" },
+        { "name": "priority", "type": "INTEGER", "nullable": false, "note": "1 높음 / 2 보통 / 3 낮음" },
+        { "name": "success_criteria", "type": "TEXT", "nullable": false },
+        { "name": "est_minutes", "type": "INTEGER", "nullable": false, "note": "예상 시간(분)" },
+        { "name": "carried_from_plan_id", "type": "INTEGER", "nullable": true, "note": "돌아보기에서 넘어온 경우 이전 계획" },
+        { "name": "carried_note", "type": "TEXT", "nullable": true, "note": "이전 계획에서 넘어온 고칠 점 한 줄" },
+        { "name": "created_at", "type": "TEXT", "nullable": false },
+        { "name": "updated_at", "type": "TEXT", "nullable": false }
+      ],
+      "foreign_keys": [{ "column": "carried_from_plan_id", "references": "plans.id", "on_delete": "SET NULL" }]
+    },
+    {
+      "name": "plan_revisions",
+      "purpose": "계획 수정 이력. revision_no 1 이 처음 세운 계획이고 고칠 때마다 다음 번호가 쌓인다. 같은 값으로 저장하면 쌓지 않는다.",
+      "primary_key": ["id"],
+      "columns": [
+        { "name": "id", "type": "INTEGER", "nullable": false },
+        { "name": "plan_id", "type": "INTEGER", "nullable": false },
+        { "name": "revision_no", "type": "INTEGER", "nullable": false },
+        { "name": "title", "type": "TEXT", "nullable": false },
+        { "name": "period_start", "type": "TEXT", "nullable": false },
+        { "name": "period_end", "type": "TEXT", "nullable": false },
+        { "name": "priority", "type": "INTEGER", "nullable": false },
+        { "name": "success_criteria", "type": "TEXT", "nullable": false },
+        { "name": "est_minutes", "type": "INTEGER", "nullable": false },
+        { "name": "recorded_at", "type": "TEXT", "nullable": false }
+      ],
+      "foreign_keys": [{ "column": "plan_id", "references": "plans.id", "on_delete": "CASCADE" }],
+      "unique": [["plan_id", "revision_no"]]
+    },
+    {
+      "name": "todos",
+      "purpose": "계획에 딸린 할 일. 완료 여부는 completions 에서만 결정된다.",
+      "primary_key": ["id"],
+      "columns": [
+        { "name": "id", "type": "INTEGER", "nullable": false, "note": "화면에는 T-<id>" },
+        { "name": "plan_id", "type": "INTEGER", "nullable": false },
+        { "name": "title", "type": "TEXT", "nullable": false },
+        { "name": "status", "type": "TEXT", "nullable": false, "default": "todo", "note": "todo | doing" },
+        { "name": "due_date", "type": "TEXT", "nullable": true, "note": "마감일(서울 날짜)" },
+        { "name": "priority", "type": "INTEGER", "nullable": false, "default": "2" },
+        { "name": "est_minutes", "type": "INTEGER", "nullable": false, "default": "0", "note": "예상 시간(분)" },
+        { "name": "created_at", "type": "TEXT", "nullable": false },
+        { "name": "updated_at", "type": "TEXT", "nullable": false }
+      ],
+      "foreign_keys": [{ "column": "plan_id", "references": "plans.id", "on_delete": "CASCADE" }]
+    },
+    {
+      "name": "todo_tags",
+      "purpose": "할 일의 태그(할 일 하나에 여러 개).",
+      "primary_key": ["todo_id", "tag"],
+      "columns": [
+        { "name": "todo_id", "type": "INTEGER", "nullable": false },
+        { "name": "tag", "type": "TEXT", "nullable": false }
+      ],
+      "foreign_keys": [{ "column": "todo_id", "references": "todos.id", "on_delete": "CASCADE" }]
+    },
+    {
+      "name": "runs",
+      "purpose": "실제로 한 일 기록. 계획·할 일 값을 덮어쓰지 않고 따로 쌓인다.",
+      "primary_key": ["id"],
+      "columns": [
+        { "name": "id", "type": "INTEGER", "nullable": false, "note": "화면에는 R-<id>" },
+        { "name": "todo_id", "type": "INTEGER", "nullable": false },
+        { "name": "started_at", "type": "TEXT", "nullable": false, "note": "시작 시각(UTC)" },
+        { "name": "ended_at", "type": "TEXT", "nullable": false, "note": "끝난 시각(UTC), started_at 이상" },
+        { "name": "actual_minutes", "type": "INTEGER", "nullable": false, "note": "실제로 걸린 시간(분) = 끝 − 시작을 분으로 반올림" },
+        { "name": "blocked_reason", "type": "TEXT", "nullable": true, "note": "막혔던 이유(없으면 NULL)" },
+        { "name": "created_at", "type": "TEXT", "nullable": false }
+      ],
+      "foreign_keys": [{ "column": "todo_id", "references": "todos.id", "on_delete": "CASCADE" }]
+    },
+    {
+      "name": "completions",
+      "purpose": "완료 기록. todo_id 가 UNIQUE 라서 같은 할 일의 완료는 몇 번 눌러도 한 건만 남는다.",
+      "primary_key": ["id"],
+      "columns": [
+        { "name": "id", "type": "INTEGER", "nullable": false },
+        { "name": "todo_id", "type": "INTEGER", "nullable": false },
+        { "name": "completed_at", "type": "TEXT", "nullable": false }
+      ],
+      "foreign_keys": [{ "column": "todo_id", "references": "todos.id", "on_delete": "CASCADE" }],
+      "unique": [["todo_id"]]
+    }
+  ],
+  "views": [
+    {
+      "name": "todo_view",
+      "purpose": "화면과 돌아보기가 함께 쓰는 할 일 뷰. 완료 상태·실제 시간 합계·실행 기록 수·태그를 붙여 준다.",
+      "columns": ["id", "plan_id", "title", "due_date", "priority", "est_minutes", "created_at", "updated_at", "status", "completed_at", "actual_minutes", "run_count", "tags"]
+    }
+  ],
+  "relations": [
+    "plans 1 — N plan_revisions (수정 이력, 삭제 시 함께 삭제)",
+    "plans 1 — N todos (계획에 딸린 할 일)",
+    "plans 1 — N plans (carried_from_plan_id: 이전 계획에서 넘어온 다음 계획)",
+    "todos 1 — N todo_tags",
+    "todos 1 — N runs (실행 기록)",
+    "todos 1 — 0..1 completions (UNIQUE)"
+  ],
+  "business_rules": {
+    "plan_edit": "계획을 고치면 plans 는 새 값이 되고 plan_revisions 에 다음 번호가 쌓인다. 처음 계획은 revision_no 1 로 그대로 남고 계획 ID 는 바뀌지 않는다.",
+    "complete_once": "완료는 INSERT OR IGNORE INTO completions 로 처리한다. UNIQUE(todo_id) 때문에 동시에 여러 번 눌러도 한 건이다. 되돌리기는 completions 행을 지우고 status 를 doing 으로 둔다.",
+    "delayed": "지연 = 완료되지 않았고 due_date 가 있으며 due_date < 서울 시간 오늘. 완료한 할 일은 지연으로 세지 않는다.",
+    "blocked": "막힘 = blocked_reason 이 적힌 실행 기록이 하나라도 있는 할 일의 수.",
+    "estimated_vs_actual": "예상 시간 = 대상 할 일의 est_minutes 합계, 실제 시간 = 대상 할 일의 runs.actual_minutes 합계, 차이 = 실제 − 예상. 없으면 0.",
+    "planned_count": "계획된 할 일 수 = 선택한 계획에 딸린, 지우지 않은 할 일의 수.",
+    "delete_todo": "할 일을 지우면 딸린 태그·실행 기록·완료 기록도 함께 지워지고 집계에서 빠진다.",
+    "carry_over": "돌아보기에서 정한 고칠 점 한 줄은 새 계획의 carried_note 로, 원래 계획은 carried_from_plan_id 로 이어진다.",
+    "public_write": "로그인이 없으므로 링크를 아는 누구나 읽고 쓸 수 있다. 입력은 서버가 검증(길이·날짜·범위)하고 화면은 textContent 로만 표시한다."
+  },
+  "limits": { "plans": 200, "todos": 2000, "runs": 5000, "tags_per_todo": 8 }
+}
