@@ -2,14 +2,15 @@
   "name": "pds-diary",
   "version": "1.0.0",
   "private": true,
-  "description": "Plan-Do-See diary (Cloudflare Workers + D1)",
+  "description": "Plan-Do-See diary 2 (Cloudflare Workers + D1) with sign-up / login",
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "dev:wrangler": "wrangler dev",
-    "db:remote": "wrangler d1 execute pds-diary --remote --file=./schema.sql",
+    "db:remote": "wrangler d1 execute pds-diary-2 --remote --file=./schema.sql",
     "test": "node scripts/api-test.mjs",
     "check:schema": "node scripts/check-schema.mjs",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "evidence": "node scripts/evidence.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.136.1"

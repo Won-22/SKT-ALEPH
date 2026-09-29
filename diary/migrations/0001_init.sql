@@ -1,28 +1,6 @@
--- 플랜두씨 다이어리 2 — 서버 데이터베이스(Cloudflare D1 / SQLite) 스키마 v3 (인증 추가)
+-- 플랜두씨 다이어리 1 — 서버 데이터베이스(Cloudflare D1 / SQLite) 스키마 v2
 -- 날짜 규칙: 날짜(YYYY-MM-DD)는 Asia/Seoul 달력 날짜, 시각(…Z)은 UTC ISO-8601, 시간 단위는 분(minute).
--- 이 파일은 "지금 최종 모양"이다. 이미 배포된 DB 는 migrations/ 를 차례로 적용해 같은 모양으로 만든다.
 PRAGMA foreign_keys = ON;
-
--- 계정. 비밀번호 원문은 저장하지 않고, 계정마다 다른 소금(salt)으로 되돌릴 수 없게 바꾼 값(pw_hash)만 저장한다.
-CREATE TABLE IF NOT EXISTS users (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,
-  login_id   TEXT    NOT NULL UNIQUE CHECK (length(login_id) BETWEEN 3 AND 30),
-  pw_algo    TEXT    NOT NULL,
-  pw_iter    INTEGER NOT NULL CHECK (pw_iter > 0),
-  pw_salt    TEXT    NOT NULL,
-  pw_hash    TEXT    NOT NULL,
-  created_at TEXT    NOT NULL
-);
-
--- 로그인 상태. 브라우저 쿠키에는 무작위 값 원문이, 여기에는 그 값의 SHA-256 만 있다(DB 가 새도 그대로는 못 쓴다).
-CREATE TABLE IF NOT EXISTS sessions (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,
-  token_hash TEXT    NOT NULL UNIQUE,
-  user_id    INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-  created_at TEXT    NOT NULL,
-  expires_at TEXT    NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions (user_id);
 
 CREATE TABLE IF NOT EXISTS plans (
   id                   INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,10 +14,8 @@ CREATE TABLE IF NOT EXISTS plans (
   carried_note         TEXT    CHECK (carried_note IS NULL OR length(carried_note) BETWEEN 1 AND 300),
   created_at           TEXT    NOT NULL,
   updated_at           TEXT    NOT NULL,
-  user_id              INTEGER REFERENCES users (id) ON DELETE CASCADE,
   CHECK (period_end >= period_start)
 );
-CREATE INDEX IF NOT EXISTS idx_plans_user ON plans (user_id);
 
 -- 수정 이력: 1번이 처음 세운 계획이고, 고칠 때마다 다음 번호가 쌓인다. plans 는 항상 최신 값이다.
 CREATE TABLE IF NOT EXISTS plan_revisions (
@@ -87,8 +63,6 @@ CREATE TABLE IF NOT EXISTS runs (
   CHECK (ended_at >= started_at)
 );
 CREATE INDEX IF NOT EXISTS idx_runs_todo ON runs (todo_id);
--- 같은 할 일을 같은 시작 시각으로 두 번 넣을 수 없다(중복 기록이 집계에 들어오지 않게).
-CREATE UNIQUE INDEX IF NOT EXISTS idx_runs_dup ON runs (todo_id, started_at);
 
 -- 완료 기록: todo_id 가 UNIQUE 이므로 같은 할 일의 완료는 몇 번을 눌러도 한 건만 남는다.
 CREATE TABLE IF NOT EXISTS completions (
@@ -97,30 +71,7 @@ CREATE TABLE IF NOT EXISTS completions (
   completed_at TEXT    NOT NULL
 );
 
--- 5일 관찰 설정: 계정마다 한 번만 정하고 고치지 않는다(질문·지표·단위).
-CREATE TABLE IF NOT EXISTS observation (
-  user_id   INTEGER PRIMARY KEY REFERENCES users (id) ON DELETE CASCADE,
-  question  TEXT    NOT NULL CHECK (length(question) BETWEEN 1 AND 200),
-  metric    TEXT    NOT NULL CHECK (metric IN ('run_minutes', 'done_count')),
-  unit      TEXT    NOT NULL,
-  locked_on TEXT    NOT NULL CHECK (locked_on GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
-  locked_at TEXT    NOT NULL
-);
-
--- 계획 규칙: 버전 1 은 처음 정한 규칙, 버전 2 는 단 한 번의 변경(바꾼 시각·이유·그 전까지 기록이 있던 날짜 목록).
-CREATE TABLE IF NOT EXISTS plan_rules (
-  id           INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id      INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-  version      INTEGER NOT NULL CHECK (version IN (1, 2)),
-  rule_text    TEXT    NOT NULL CHECK (length(rule_text) BETWEEN 1 AND 300),
-  reason       TEXT    CHECK (reason IS NULL OR length(reason) BETWEEN 1 AND 300),
-  changed_at   TEXT    NOT NULL,
-  changed_on   TEXT    NOT NULL CHECK (changed_on GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
-  before_dates TEXT,
-  UNIQUE (user_id, version)
-);
-
--- 화면과 집계가 함께 쓰는 할 일 뷰: 완료 여부는 completions 하나에서만 결정되고, 주인(user_id)은 계획에서 온다.
+-- 화면과 집계가 함께 쓰는 할 일 뷰: 완료 여부는 completions 하나에서만 결정된다.
 DROP VIEW IF EXISTS todo_view;
 CREATE VIEW todo_view AS
 SELECT
@@ -129,8 +80,6 @@ SELECT
   c.completed_at AS completed_at,
   COALESCE((SELECT SUM(r.actual_minutes) FROM runs r WHERE r.todo_id = t.id), 0) AS actual_minutes,
   (SELECT COUNT(*) FROM runs r WHERE r.todo_id = t.id) AS run_count,
-  (SELECT group_concat(tag, ',') FROM (SELECT tag FROM todo_tags WHERE todo_id = t.id ORDER BY tag)) AS tags,
-  p.user_id AS user_id
+  (SELECT group_concat(tag, ',') FROM (SELECT tag FROM todo_tags WHERE todo_id = t.id ORDER BY tag)) AS tags
 FROM todos t
-JOIN plans p ON p.id = t.plan_id
 LEFT JOIN completions c ON c.todo_id = t.id;

@@ -25,7 +25,7 @@ if (fs.existsSync(headersFile)) {
 
 const server = http.createServer(async (req, res) => {
   try {
-    const url = new URL(req.url, `http://localhost:${port}`);
+    const url = new URL(req.url, `http://${req.headers.host || 'localhost:' + port}`);
     if (url.pathname.startsWith('/api/')) {
       const chunks = [];
       for await (const c of req) chunks.push(c);

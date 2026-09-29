@@ -100,3 +100,23 @@ pre.schema{background:#f0f2fb;border-radius:10px;padding:12px;overflow-x:auto;fo
   .metric .n{font-size:1.5rem}
   .kv{grid-template-columns:1fr}
 }
+
+/* ---- 7번: 로그인·계정·5일 관찰 ---- */
+.userbar{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:.9rem;font-weight:700}
+.userbar[hidden]{display:none}
+.auth{max-width:420px;margin:24px auto}
+.auth .switch{display:flex;gap:6px;margin-bottom:10px}
+.auth .switch button[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
+.auth .fine{margin:10px 0 0;font-size:.82rem;color:var(--sub)}
+.tblwrap{overflow-x:auto}
+table.tbl{border-collapse:collapse;width:100%;font-size:.88rem}
+table.tbl th,table.tbl td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+table.tbl th{background:#f4f6ff;font-weight:700;white-space:nowrap}
+table.tbl td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.tbl tr.gap td{color:var(--sub)}
+.grp{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.75rem;font-weight:700;background:#eef0fb;color:var(--brand-dark)}
+.grp.after{background:#e3f6ec;color:#0a7440}
+.rule{border-left:3px solid var(--brand);padding:2px 0 2px 10px;margin:8px 0}
+.warn{padding:10px 12px;border-radius:10px;background:#fff5f5;border:1px solid #efc2c2;color:#7a1f1f;font-size:.9rem}
+.formula{font-variant-numeric:tabular-nums;font-size:.82rem;color:var(--sub)}
+[hidden]{display:none !important}

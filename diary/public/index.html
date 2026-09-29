@@ -3,24 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>플랜두씨 다이어리 1</title>
-<meta name="description" content="계획(Plan) → 실제로 한 일(Do) → 돌아보기(See)를 서버 데이터베이스에 남기는 다이어리">
+<title>플랜두씨 다이어리 2</title>
+<meta name="description" content="계획(Plan) → 실제로 한 일(Do) → 돌아보기(See)를 서버 데이터베이스에 남기고, 로그인한 나만 보는 다이어리">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="top">
   <div class="wrap">
     <div class="brand">
-      <h1>플랜두씨 다이어리 <span class="ver">1</span></h1>
+      <h1>플랜두씨 다이어리 <span class="ver">2</span></h1>
       <p class="sub">계획(Plan) → 실제로 한 일(Do) → 돌아보기(See)</p>
     </div>
-    <p class="notice" id="public-notice" role="note">지금은 로그인이 없어 링크를 아는 사람은 누구나 볼 수 있습니다. 남이 봐도 괜찮은 내용만 넣으세요.</p>
-    <nav id="tabs" aria-label="화면 이동">
+    <p class="notice" id="public-notice" role="note">로그인한 사람만 자기 자료를 볼 수 있습니다. 링크를 알아도 로그인 없이는 열리지 않고, 다른 계정의 자료는 읽거나 고치거나 지울 수 없습니다.</p>
+    <div id="account" class="userbar" hidden></div>
+    <nav id="tabs" aria-label="화면 이동" hidden>
       <a href="#/plans" data-tab="plans">계획</a>
       <a href="#/todos" data-tab="todos">할 일</a>
       <a href="#/runs" data-tab="runs">실행 기록</a>
       <a href="#/review" data-tab="review">돌아보기</a>
+      <a href="#/observe" data-tab="observe">5일 관찰</a>
       <a href="#/mydata" data-tab="mydata">내 자료</a>
+      <a href="#/account" data-tab="account">내 계정</a>
     </nav>
   </div>
 </header>

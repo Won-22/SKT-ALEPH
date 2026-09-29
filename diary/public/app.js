@@ -1,15 +1,16 @@
 'use strict';
-/* 플랜두씨 다이어리 1 — 화면. 모든 값은 서버(/api)에서 읽고 쓴다. 사용자가 넣은 글자는 textContent 로만 표시한다(HTML 해석 없음). */
+/* 플랜두씨 다이어리 2 — 화면. 모든 값은 서버(/api)에서 읽고 쓴다. 사용자가 넣은 글자는 textContent 로만 표시한다(HTML 해석 없음). */
 
 const $ = (s, r = document) => r.querySelector(s);
 const view = $('#view');
 const PRI = { 1: '높음', 2: '보통', 3: '낮음' };
 const STATUS = { todo: '할 일', doing: '진행 중', done: '완료' };
-const TABS = { plans: renderPlans, todos: renderTodos, runs: renderRuns, review: renderReview, mydata: renderMyData };
+const TABS = { plans: renderPlans, todos: renderTodos, runs: renderRuns, review: renderReview, observe: renderObserve, mydata: renderMyData, account: renderAccount };
 const pid = (n) => 'P-' + n;
 const tid = (n) => 'T-' + n;
 const rid = (n) => 'R-' + n;
 let uid = 0;
+let me = null; // 로그인한 사람({login_id}) 또는 null. 화면 표시용일 뿐, 자료를 여는 것은 서버가 쿠키로 확인한다.
 
 function h(tag, props, ...kids) {
   const el = document.createElement(tag);
@@ -39,6 +40,7 @@ async function api(method, path, body) {
   });
   let data;
   try { data = await res.json(); } catch { data = { error: '서버 응답을 읽을 수 없습니다.' }; }
+  if (res.status === 401 && me && !path.startsWith('/auth/')) { me = null; showLogin('로그인이 끝났습니다. 다시 로그인해 주세요.'); }
   if (!res.ok) throw new Error(data.error || '요청에 실패했습니다.');
   return data;
 }
@@ -397,7 +399,7 @@ async function renderMyData() {
       h('dt', { text: '완료 기록' }), h('dd', { text: meta.counts.completions + '건' }),
       h('dt', { text: '오늘(서울)' }), h('dd', { text: meta.today_kst }))));
   root.append(card('전체 내보내기',
-    h('p', { class: 'muted small', text: '내 계획·이력·할 일·태그·실행 기록·완료 기록을 파일 하나로 내려받습니다. 새로고침해도 같은 값입니다.' }),
+    h('p', { class: 'muted small', text: '내 계획·이력·할 일·태그·실행 기록·완료 기록·5일 관찰 설정을 파일 하나로 내려받습니다. 비밀번호와 로그인 값은 들어 있지 않습니다.' }),
     h('div', { class: 'actions' }, h('button', { class: 'primary', text: '전체 내보내기 (JSON)', onclick: async () => {
       try {
         const res = await fetch('/api/export');
@@ -412,7 +414,8 @@ async function renderMyData() {
   root.append(card('저장과 공개 방식',
     h('dl', { class: 'kv' },
       h('dt', { text: '저장 위치' }), h('dd', { text: '서버 데이터베이스(Cloudflare D1). 브라우저 저장소를 쓰지 않으므로 새로고침·다른 기기에서도 같은 값이 보입니다.' }),
-      h('dt', { text: '공개 범위' }), h('dd', { text: '아직 로그인이 없어 링크를 아는 사람은 누구나 볼 수 있습니다. 남이 봐도 괜찮은 내용만 넣으세요. 잠그는 일은 7번 과제에서 합니다.' }),
+      h('dt', { text: '공개 범위' }), h('dd', { text: '로그인한 나만 볼 수 있습니다. 링크를 알아도 로그인 없이는 자료가 열리지 않고, 다른 계정으로는 내 자료를 읽거나 고치거나 지울 수 없습니다(서버가 요청마다 확인).' }),
+      h('dt', { text: '비밀번호·로그인' }), h('dd', { text: '비밀번호는 되돌릴 수 없는 값으로만 저장됩니다(원문 없음). 로그인 상태는 7일 뒤 끊기고, 로그아웃하거나 비밀번호를 바꾸면 서버에서 바로 끊깁니다.' }),
       h('dt', { text: '날짜·시간 규칙' }), h('dd', { text: '날짜는 서울(Asia/Seoul) 달력 날짜, 시각은 UTC로 저장하고 화면에는 KST로 보여 줍니다. 시간 단위는 모두 분입니다.' }),
       h('dt', { text: '입력한 글자' }), h('dd', { text: '<script> 같은 글자도 실행되지 않고 입력한 그대로 표시됩니다.' }),
       h('dt', { text: '스키마 문서' }), h('dd', {}, h('a', { href: 'https://github.com/Won-22/SKT-ALEPH/blob/main/diary/contracts/pds-schema-v2.json', text: 'contracts/pds-schema-v2.json', rel: 'noopener' })))));
@@ -425,9 +428,205 @@ function parseHash() {
   return { tab: TABS[name] ? name : 'plans', q: new URLSearchParams(qs || '') };
 }
 async function route() {
+  if (!me) { showLogin(); return; }
   const { tab, q } = parseHash();
   document.querySelectorAll('#tabs a').forEach((a) => (a.dataset.tab === tab ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
   try { await TABS[tab](q); } catch (e) { view.replaceChildren(card('오류', h('p', { class: 'error', text: e.message }))); }
 }
 window.addEventListener('hashchange', route);
-route();
+boot();
+
+
+/* ---------------- 로그인 · 계정 ---------------- */
+function renderShell() {
+  $('#tabs').hidden = !me;
+  const box = $('#account');
+  box.hidden = !me;
+  if (me) fill(box, h('span', { text: me.login_id + ' 님으로 로그인함' }), h('button', { class: 'small', text: '로그아웃', onclick: doLogout }));
+  else box.replaceChildren();
+}
+
+async function boot() {
+  try { const d = await api('GET', '/auth/me'); me = d.user; } catch { me = null; }
+  if (me && !location.hash) location.hash = '#/plans';
+  renderShell();
+  route();
+}
+
+async function doLogout() {
+  try { await api('POST', '/auth/logout'); } catch { /* 이미 끊겼어도 화면은 로그인으로 */ }
+  me = null;
+  showLogin('로그아웃했습니다. 서버에서도 로그인 상태를 지웠습니다.');
+}
+
+function showLogin(notice) {
+  renderShell();
+  document.querySelectorAll('#tabs a').forEach((a) => a.removeAttribute('aria-current'));
+  let mode = 'login';
+  const box = h('div', { class: 'auth' });
+  function draw(msg) {
+    const signup = mode === 'signup';
+    const id = h('input', { type: 'text', autocomplete: 'username', required: true, maxlength: 30, autocapitalize: 'none', spellcheck: 'false' });
+    const pw = h('input', { type: 'password', autocomplete: signup ? 'new-password' : 'current-password', required: true, minlength: signup ? 8 : null, maxlength: 128 });
+    const pw2 = signup ? h('input', { type: 'password', autocomplete: 'new-password', required: true, maxlength: 128 }) : null;
+    const err = errorBox();
+    const form = h('form', {},
+      h('div', { class: 'grid' }, field('아이디', id), field('비밀번호', pw), pw2 ? field('비밀번호 확인', pw2) : null),
+      signup ? h('p', { class: 'fine', text: '아이디는 영문 소문자·숫자·._- 3~30자, 비밀번호는 8자 이상입니다. 이메일은 받지 않습니다.' }) : null,
+      h('div', { class: 'actions' }, h('button', { type: 'submit', class: 'primary', text: signup ? '가입하고 시작' : '로그인' })), err);
+    submitForm(form, err, async () => {
+      if (signup && pw.value !== pw2.value) throw new Error('비밀번호 확인이 서로 다릅니다.');
+      const d = await api('POST', signup ? '/auth/signup' : '/auth/login', { login_id: id.value, password: pw.value });
+      me = d.user;
+      pw.value = ''; if (pw2) pw2.value = '';
+      location.hash = '#/plans';
+      renderShell();
+      route();
+    });
+    fill(box,
+      h('section', { class: 'card' },
+        h('h2', { text: signup ? '가입하기' : '로그인' }),
+        msg ? h('p', { class: 'note', role: 'status', text: msg }) : null,
+        h('div', { class: 'switch' },
+          h('button', { type: 'button', class: 'small', 'aria-pressed': String(!signup), text: '로그인', onclick: () => { mode = 'login'; draw(); } }),
+          h('button', { type: 'button', class: 'small', 'aria-pressed': String(signup), text: '가입', onclick: () => { mode = 'signup'; draw(); } })),
+        form,
+        h('p', { class: 'fine', text: '이 다이어리는 로그인한 사람만 자기 계획·할 일·실행 기록을 봅니다. 로그인하지 않으면 자료 화면 주소를 열어도 이 화면이 나옵니다.' })));
+  }
+  draw(notice);
+  view.replaceChildren(box);
+}
+
+async function renderAccount() {
+  const d = await api('GET', '/auth/me');
+  const root = h('div', {});
+  root.append(card('내 계정',
+    h('dl', { class: 'kv' },
+      h('dt', { text: '아이디' }), h('dd', { text: d.user.login_id }),
+      h('dt', { text: '가입 시각' }), h('dd', { text: fmtKST(d.user.created_at) }),
+      h('dt', { text: '이 로그인이 끊기는 시각' }), h('dd', { text: fmtKST(d.session.expires_at) + ' (발급 후 ' + d.session.ttl_days + '일. 그 전에도 로그아웃하면 서버에서 바로 끊깁니다)' }))));
+
+  const cur = h('input', { type: 'password', autocomplete: 'current-password', required: true, maxlength: 128 });
+  const nw = h('input', { type: 'password', autocomplete: 'new-password', required: true, minlength: 8, maxlength: 128 });
+  const nw2 = h('input', { type: 'password', autocomplete: 'new-password', required: true, maxlength: 128 });
+  const err1 = errorBox();
+  const pwForm = h('form', {},
+    h('div', { class: 'grid two' }, field('현재 비밀번호', cur), field('새 비밀번호 (8자 이상)', nw), field('새 비밀번호 확인', nw2)),
+    h('div', { class: 'actions' }, h('button', { type: 'submit', class: 'primary', text: '비밀번호 바꾸기' })), err1);
+  submitForm(pwForm, err1, async () => {
+    if (nw.value !== nw2.value) throw new Error('새 비밀번호 확인이 서로 다릅니다.');
+    await api('POST', '/auth/password', { current_password: cur.value, new_password: nw.value });
+    toast('비밀번호를 바꿨습니다. 이전에 발급된 로그인은 모두 끊겼고, 이 기기만 새로 로그인된 상태입니다.');
+    route();
+  });
+  root.append(card('비밀번호 바꾸기', pwForm));
+
+  const delPw = h('input', { type: 'password', autocomplete: 'current-password', required: true, maxlength: 128 });
+  const err2 = errorBox();
+  const delForm = h('form', {},
+    h('p', { class: 'warn', text: '계정을 지우면 내 계획·이력·할 일·태그·실행 기록·완료 기록·5일 관찰 설정이 모두 함께 지워지고 되돌릴 수 없습니다. 필요하면 먼저 "내 자료"에서 전체 내보내기를 하세요.' }),
+    h('div', { class: 'grid two' }, field('비밀번호 확인', delPw)),
+    h('div', { class: 'actions' }, h('button', { type: 'submit', class: 'danger', text: '계정과 내 자료 모두 지우기' })), err2);
+  submitForm(delForm, err2, async () => {
+    if (!confirm('정말 계정과 모든 자료를 지울까요? 되돌릴 수 없습니다.')) return;
+    await api('DELETE', '/auth/account', { password: delPw.value });
+    me = null;
+    showLogin('계정과 딸린 자료를 모두 지웠습니다.');
+  });
+  root.append(card('계정 지우기', delForm));
+  view.replaceChildren(root);
+}
+
+/* ---------------- 5일 관찰 ---------------- */
+const POLICY_LABELS = [
+  ['day_boundary', '하루의 경계'], ['missing', '값이 빠졌을 때'], ['duplicate', '값이 중복될 때'], ['outlier', '값이 유난히 클 때'],
+  ['rounding', '반올림'], ['week_start', '주 시작 요일'], ['order', '입력 순서']
+];
+const th = (...t) => h('tr', {}, t.map((x) => h('th', { text: x })));
+const round1 = (n) => Math.round(n * 10) / 10;
+
+async function renderObserve() {
+  const d = await api('GET', '/observation');
+  const root = h('div', {});
+  const policyCard = (title) => card(title, h('dl', { class: 'kv' }, POLICY_LABELS.flatMap(([k, l]) => [h('dt', { text: l }), h('dd', { text: d.policy[k] })])));
+
+  if (!d.setup) {
+    const q = h('input', { type: 'text', maxlength: 200, required: true, placeholder: '예: 계획을 줄이면 하루에 실제로 한 시간이 늘어날까?' });
+    const metric = select(Object.fromEntries(Object.entries(d.metrics).map(([k, m]) => [k, m.label + ' — 단위: ' + m.unit])), 'run_minutes');
+    const rule = h('input', { type: 'text', maxlength: 300, required: true, placeholder: '예: 하루에 할 일은 3개까지만 잡는다' });
+    const err = errorBox();
+    const form = h('form', {},
+      h('p', { class: 'muted small', text: '1일차에 딱 한 번 정합니다. 저장하면 질문·지표·단위는 고칠 수 없고, 오늘(' + d.today_kst + ')부터의 기록만 셉니다. 값은 실행 기록·완료 기록에서 서버가 계산하므로 따로 입력하지 않습니다.' }),
+      h('div', { class: 'grid' }, field('1일차에 답하려는 질문 (한 문장)', q, true), field('볼 지표 하나 (단위 포함)', metric, true), field('처음 계획 규칙 (사람이 읽는 문장)', rule, true)),
+      h('div', { class: 'actions' }, h('button', { type: 'submit', class: 'primary', text: '이대로 정하기' })), err);
+    submitForm(form, err, async () => {
+      if (!confirm('정한 뒤에는 질문·지표·단위를 고칠 수 없습니다. 이대로 정할까요?')) return;
+      await api('POST', '/observation', { question: q.value, metric: metric.value, plan_rule: rule.value });
+      toast('정했습니다. 오늘부터 기록을 셉니다.');
+      route();
+    });
+    root.append(card('1일차에 정하기', form), policyCard('처리 규칙 (미리 알려 드립니다)'));
+    view.replaceChildren(root);
+    return;
+  }
+
+  const s = d.setup;
+  root.append(card('고정된 질문·지표·단위',
+    h('dl', { class: 'kv' },
+      h('dt', { text: '답하려는 질문' }), h('dd', { text: s.question }),
+      h('dt', { text: '관찰 지표' }), h('dd', { text: s.metric_label }),
+      h('dt', { text: '단위' }), h('dd', { text: s.unit }),
+      h('dt', { text: '계산 규칙' }), h('dd', { text: '서울 날짜별 값의 합계. 여러 날의 평균 = 합계 ÷ 기록이 있는 일수' }),
+      h('dt', { text: '관찰 시작일' }), h('dd', { text: s.locked_on + ' (정한 시각 ' + fmtKST(s.locked_at) + ') — 이날 이후 기록만 셉니다' })),
+    h('p', { class: 'small muted', text: '질문·지표·단위·계산 규칙은 고칠 수 없습니다. 바꿀 수 있는 것은 아래 계획 규칙 한 가지, 한 번뿐입니다.' })));
+  root.append(policyCard('값을 처리하는 규칙'));
+
+  const ruleBox = card('계획 규칙 (바꿀 수 있는 것 하나)',
+    d.rules.map((r) => h('div', { class: 'rule' },
+      h('strong', { text: r.version === 1 ? '처음 규칙' : '바꾼 규칙' }), ' — ' + r.rule_text,
+      h('div', { class: 'small muted', text: r.version === 1
+        ? '정한 시각 ' + fmtKST(r.changed_at)
+        : '바꾼 시각 ' + fmtKST(r.changed_at) + ' (서울 날짜 ' + r.changed_on + ') · 이유: ' + r.reason + ' · 이 변경은 기록이 있던 날(' + (r.before_dates || []).join(', ') + ') 뒤에 놓이고, ' + r.changed_on + ' 이후의 기록이 "변경 후"입니다.' }))));
+  if (d.rules.length < 2) {
+    const nr = h('input', { type: 'text', maxlength: 300, placeholder: '바꿀 규칙 문장' });
+    const why = h('input', { type: 'text', maxlength: 300, placeholder: '왜 바꾸는지 한 줄' });
+    const err = errorBox();
+    const form = h('form', {},
+      h('p', { class: d.can_change.ok ? 'muted small' : 'warn', text: d.can_change.why }),
+      d.can_change.ok ? h('div', { class: 'grid' }, field('새 계획 규칙', nr, true), field('바꾸는 이유', why, true)) : null,
+      d.can_change.ok ? h('div', { class: 'actions' }, h('button', { type: 'submit', class: 'primary', text: '규칙 바꾸기 (한 번만)' })) : null, err);
+    submitForm(form, err, async () => {
+      if (!confirm('계획 규칙은 한 번만 바꿀 수 있습니다. 지금 바꿀까요?')) return;
+      await api('POST', '/observation/rule-change', { rule_text: nr.value, reason: why.value });
+      toast('규칙 변경을 기록했습니다.');
+      route();
+    });
+    ruleBox.append(form);
+  }
+  root.append(ruleBox);
+
+  const unit = s.unit;
+  root.append(card('날짜별 기록 (서울 날짜)',
+    h('p', { class: 'small muted', text: '기록 있는 날 ' + d.data_days + '일 (이 과제는 서로 다른 날짜 5일이 필요합니다)' }),
+    h('div', { class: 'tblwrap' }, h('table', { class: 'tbl' },
+      h('thead', {}, th('날짜', '주 시작(월)', '값(' + unit + ')', '기록 수', '구분')),
+      h('tbody', {}, d.days.map((x) => h('tr', { class: x.value === null ? 'gap' : '' },
+        h('td', { text: x.date }), h('td', { text: x.week_start }),
+        h('td', { class: 'num', text: x.value === null ? '기록 없음 (평균에서 제외)' : x.value }),
+        h('td', { class: 'num', text: x.records }),
+        h('td', {}, x.group ? h('span', { class: 'grp' + (x.group === 'after' ? ' after' : ''), text: x.group === 'after' ? '변경 후' : d.groups ? '변경 전' : '변경 전(아직 안 바꿈)' }) : ''))))))));
+
+  const rows = [['5일 전체', d.overall]];
+  if (d.groups) { rows.unshift(['변경 후', d.groups.after]); rows.unshift(['변경 전', d.groups.before]); }
+  const diff = d.groups && d.groups.before.avg !== null && d.groups.after.avg !== null ? round1(d.groups.after.avg - d.groups.before.avg) : null;
+  root.append(card('합계와 평균 (같은 지표·같은 단위·같은 계산 규칙)',
+    h('div', { class: 'tblwrap' }, h('table', { class: 'tbl' },
+      h('thead', {}, th('구분', '일수', '합계(' + unit + ')', '평균(' + unit + '/일)', '계산식')),
+      h('tbody', {}, rows.map(([l, g]) => h('tr', {},
+        h('td', { text: l }), h('td', { class: 'num', text: g.days }), h('td', { class: 'num', text: g.total }),
+        h('td', { class: 'num', text: g.avg === null ? '—' : g.avg.toFixed(1) }), h('td', { class: 'formula', text: g.formula })))))),
+    diff !== null
+      ? h('p', { text: '변경 후 평균 − 변경 전 평균 = ' + (diff > 0 ? '+' : '') + diff.toFixed(1) + ' ' + unit + '/일 (나빠졌어도 그대로 둡니다)' })
+      : h('p', { class: 'small muted', text: d.groups ? '변경 전·후 모두 기록이 쌓이면 비교가 나옵니다.' : '계획 규칙을 바꾸면 변경 전·후 비교가 여기에 나옵니다.' })));
+  view.replaceChildren(root);
+}
