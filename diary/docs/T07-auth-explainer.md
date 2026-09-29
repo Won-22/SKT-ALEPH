@@ -62,7 +62,7 @@
 
 ## ④ 안 열리는 것을 확인한 기록
 
-전체 요청·응답 원문(비밀값 가림)은 [docs/evidence/local-run.md](https://github.com/Won-22/SKT-ALEPH/blob/1946c2f060fb7913903b6061b5a9fe8ca98dfba5/diary/docs/evidence/local-run.md) 에 있습니다(로컬 실행 · 같은 Worker 코드). 배포 서버에서 같은 스크립트를 돌린 기록은 [docs/evidence/live-run.md](https://github.com/Won-22/SKT-ALEPH/blob/main/diary/docs/evidence/live-run.md) 에 추가합니다. 다섯 가지 확인마다 성공한 요청과 거절된 요청을 나란히 적습니다.
+전체 요청·응답 원문(비밀값 가림)은 [docs/evidence/local-run.md](https://github.com/Won-22/SKT-ALEPH/blob/b07600cf09c481f0e76f56db7ad0e0238ea4a0ed/diary/docs/evidence/local-run.md) 에 있습니다(로컬 실행 · 같은 Worker 코드). 배포 서버에서 같은 스크립트를 돌린 기록은 [docs/evidence/live-run.md](https://github.com/Won-22/SKT-ALEPH/blob/main/diary/docs/evidence/live-run.md) 에 추가합니다. 다섯 가지 확인마다 성공한 요청과 거절된 요청을 나란히 적습니다.
 
 | # | 확인 | 성공한 요청 | 거절된 요청 |
 |---|---|---|---|
