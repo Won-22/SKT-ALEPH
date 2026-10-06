@@ -1,0 +1,21 @@
+{
+  "name": "pds-passkey",
+  "version": "1.0.0",
+  "private": true,
+  "description": "1번 소개 페이지 + 패스키로 잠그는 나만의 자리 (Cloudflare Workers + D1)",
+  "type": "module",
+  "scripts": {
+    "build:public": "node scripts/build-public.mjs",
+    "check:public": "node scripts/check-public.mjs",
+    "dev": "node scripts/dev.mjs",
+    "test": "node scripts/api-test.mjs",
+    "evidence": "node scripts/evidence.mjs",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@simplewebauthn/server": "14.0.3"
+  },
+  "devDependencies": {
+    "wrangler": "^4.136.1"
+  }
+}

@@ -1,0 +1,33 @@
+/* 나만의 자리(패스키) — 1번 소개 페이지의 색 변수(--accent, --dot-public, --dot-private …)를 그대로 쓴다. */
+.zone-banner{display:flex;align-items:center;gap:10px;margin:0;padding:10px 16px;border-radius:12px;font-size:.92rem;border:1px solid var(--border);background:var(--surface)}
+.zone-banner .zone-dot{flex:0 0 auto;width:12px;height:12px;border-radius:50%}
+.zone-public{max-width:var(--maxw);margin:16px auto 0;border-color:var(--dot-public);color:#0d6b49;background:#eefaf4}
+.zone-public .zone-dot{background:var(--dot-public)}
+.zone-private{border:1px dashed var(--dot-private);color:#8a1c1c;background:#fff4f4}
+.zone-private .zone-dot{background:var(--dot-private)}
+.zone-section{margin-top:48px;margin-bottom:48px;padding:20px;border:2px dashed var(--dot-private);border-radius:var(--radius);background:linear-gradient(#fffafa,#fff)}
+.zone-section h2{margin:16px 0 8px;font-size:1.5rem}
+#private-view{display:grid;gap:16px;margin-top:8px}
+.pv-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px}
+.pv-card h3{margin:0 0 8px;font-size:1.05rem}
+.pv-muted{color:var(--ink-soft);font-size:.92rem}
+.pv-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.pv-row label{display:grid;gap:4px;font-size:.85rem;color:var(--ink-soft);flex:1 1 200px}
+.pv-row input,.pv-row textarea{font:inherit;padding:9px 12px;border:1px solid var(--border);border-radius:10px;width:100%;background:#fff;color:var(--ink)}
+.pv-btn{font:inherit;font-weight:700;padding:10px 18px;border-radius:999px;border:1.5px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.pv-btn:hover{background:var(--accent-dark);border-color:var(--accent-dark)}
+.pv-btn.line{background:transparent;color:var(--accent)}
+.pv-btn.line:hover{background:var(--accent);color:#fff}
+.pv-btn.danger{background:transparent;border-color:var(--dot-private);color:#a11}
+.pv-btn.danger:hover{background:var(--dot-private);color:#fff}
+.pv-btn.small{padding:5px 12px;font-size:.82rem}
+.pv-msg{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:.9rem}
+.pv-msg.err{background:#fdeaea;color:#8a1c1c;border:1px solid #efc2c2}
+.pv-msg.info{background:#eef3ff;color:#163c99;border:1px solid var(--border)}
+.pv-item{border-top:1px solid var(--border);padding:12px 0}
+.pv-item:first-child{border-top:0}
+.pv-item h4{margin:0 0 4px;font-size:1rem}
+.pv-item p{white-space:pre-wrap;word-break:break-word}
+.pv-key{font-family:ui-monospace,Consolas,monospace;font-size:.78rem;word-break:break-all;color:var(--ink-soft)}
+.pv-top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+@media (max-width:600px){.zone-section{padding:14px}}

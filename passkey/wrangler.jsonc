@@ -1,0 +1,17 @@
+{
+  "name": "pds-passkey",
+  "main": "src/worker.js",
+  "compatibility_date": "2025-09-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "directory": "./public"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "pds-passkey",
+      "database_id": "c943c10f-2bc2-4f7b-a3ef-38632f606009"
+    }
+  ]
+}
