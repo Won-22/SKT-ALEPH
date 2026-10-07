@@ -2,7 +2,7 @@
 
 - 결과물(첫 화면은 누구나 볼 수 있는 소개 페이지, 비공개 자리는 패스키로 잠김): https://pds-passkey.pds-diary.workers.dev
 - 이어 붙인 1번 소개 페이지: 저장소 루트의 `index.html`(1번 결과). 이 결과물의 공개 영역은 그 파일에 **추가만** 한 것입니다.
-- 이 설명서가 가리키는 소스: commit `f2be34417fd03715f7de9dd50859e7c5200787dc` (아래 링크는 모두 이 commit 의 고정 주소)
+- 이 설명서가 가리키는 소스: commit `dea07c7e881c2be98cd8c81f060848f2e34bf5f6` (아래 링크는 모두 이 commit 의 고정 주소)
 - 비밀번호 칸은 이 시스템에 없습니다. 세션 값은 증거 기록에서 앞 4글자만 보이게 가렸습니다.
 
 > 설명서 여섯 항목: ① 무엇으로 붙였나 · ② 왜 그걸 골랐나 · ③ 어디를 어떻게 고쳤나 · ④ 안 열리는 것을 확인한 기록 · ⑤ AI와 나 · ⑥ 아직 못 막은 것
@@ -35,24 +35,24 @@
 
 ## ③ 어디를 어떻게 고쳤나
 
-소스 링크 기준: `https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/`
+소스 링크 기준: `https://github.com/Won-22/SKT-ALEPH/blob/dea07c7e881c2be98cd8c81f060848f2e34bf5f6/passkey/`
 
-**등록·로그인·로그아웃·비공개 자료 조회 네 흐름이 소스를 지나는 곳** ([src/worker.js](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/src/worker.js))
+**등록·로그인·로그아웃·비공개 자료 조회 네 흐름이 소스를 지나는 곳** ([src/worker.js](https://github.com/Won-22/SKT-ALEPH/blob/dea07c7e881c2be98cd8c81f060848f2e34bf5f6/passkey/src/worker.js))
 
 | 흐름 | 지나는 곳 |
 |---|---|
-| 등록 | 화면 `doRegister`(public/passkey.js) → `POST /api/register/options` → [`registerOptions` L133](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/src/worker.js#L133)(질문 생성·DB 보관, 이미 있는 자리 이름은 409) → 브라우저가 기기 확인창을 띄우고 공개키와 서명을 돌려줌 → `POST /api/register/verify` → [`takeChallenge` L84](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/src/worker.js#L84)(질문 확인과 동시에 삭제) → [`verifyNewPasskey` L150](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/src/worker.js#L150)(라이브러리 검증) → [`registerVerify` L164](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/src/worker.js#L164)(계정·공개키 저장, 세션 발급) |
-| 로그인 | `doLogin` → `POST /api/login/options` → [`loginOptions` L185](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/src/worker.js#L185)(새 질문) → 기기가 개인키로 서명 → `POST /api/login/verify` → [`loginVerify` L191](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/src/worker.js#L191)(질문 삭제 → 저장된 공개키로 서명 확인 → 실패는 이유를 알리지 않고 같은 401 → 성공이면 세션 쿠키 발급) |
-| 로그아웃 | `POST /api/logout` → [`logout` L213](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/src/worker.js#L213) → 서버의 세션 행 삭제 + 쿠키 삭제 지시 |
-| 비공개 자료 조회 | `GET /api/private/items` → 라우터의 [`currentAccount` 호출 L311](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/src/worker.js#L311)(쿠키 → SHA-256 → 세션 조회·만료 확인, 없으면 401) → [`listItems` L278](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/src/worker.js#L278)(`WHERE account_id = ?`) |
+| 등록 | 화면 `doRegister`(public/passkey.js) → `POST /api/register/options` → [`registerOptions` L133](https://github.com/Won-22/SKT-ALEPH/blob/dea07c7e881c2be98cd8c81f060848f2e34bf5f6/passkey/src/worker.js#L133)(질문 생성·DB 보관, 이미 있는 자리 이름은 409) → 브라우저가 기기 확인창을 띄우고 공개키와 서명을 돌려줌 → `POST /api/register/verify` → [`takeChallenge` L84](https://github.com/Won-22/SKT-ALEPH/blob/dea07c7e881c2be98cd8c81f060848f2e34bf5f6/passkey/src/worker.js#L84)(질문 확인과 동시에 삭제) → [`verifyNewPasskey` L150](https://github.com/Won-22/SKT-ALEPH/blob/dea07c7e881c2be98cd8c81f060848f2e34bf5f6/passkey/src/worker.js#L150)(라이브러리 검증) → [`registerVerify` L164](https://github.com/Won-22/SKT-ALEPH/blob/dea07c7e881c2be98cd8c81f060848f2e34bf5f6/passkey/src/worker.js#L164)(계정·공개키 저장, 세션 발급) |
+| 로그인 | `doLogin` → `POST /api/login/options` → [`loginOptions` L185](https://github.com/Won-22/SKT-ALEPH/blob/dea07c7e881c2be98cd8c81f060848f2e34bf5f6/passkey/src/worker.js#L185)(새 질문) → 기기가 개인키로 서명 → `POST /api/login/verify` → [`loginVerify` L191](https://github.com/Won-22/SKT-ALEPH/blob/dea07c7e881c2be98cd8c81f060848f2e34bf5f6/passkey/src/worker.js#L191)(질문 삭제 → 저장된 공개키로 서명 확인 → 실패는 이유를 알리지 않고 같은 401 → 성공이면 세션 쿠키 발급) |
+| 로그아웃 | `POST /api/logout` → [`logout` L213](https://github.com/Won-22/SKT-ALEPH/blob/dea07c7e881c2be98cd8c81f060848f2e34bf5f6/passkey/src/worker.js#L213) → 서버의 세션 행 삭제 + 쿠키 삭제 지시 |
+| 비공개 자료 조회 | `GET /api/private/items` → 라우터의 [`currentAccount` 호출 L311](https://github.com/Won-22/SKT-ALEPH/blob/dea07c7e881c2be98cd8c81f060848f2e34bf5f6/passkey/src/worker.js#L311)(쿠키 → SHA-256 → 세션 조회·만료 확인, 없으면 401) → [`listItems` L278](https://github.com/Won-22/SKT-ALEPH/blob/dea07c7e881c2be98cd8c81f060848f2e34bf5f6/passkey/src/worker.js#L278)(`WHERE account_id = ?`) |
 
 **그 밖에 고친 곳**
 
-- 1번 소개 페이지: [scripts/build-public.mjs](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/scripts/build-public.mjs)가 루트 `index.html` 에 **추가 블록 5개**(메뉴 링크 1, 공개 영역 안내 줄, 비공개 영역 구역, CSS 링크(디자인 `design.css` 와 비공개 영역용 `passkey.css`), JS 링크)만 끼워 [public/index.html](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/public/index.html)을 만듭니다. [scripts/check-public.mjs](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/scripts/check-public.mjs)로 추가 블록을 빼면 1번 페이지와 **글자 하나까지 같은 것**을 확인했습니다(1번 공개 내용이 그대로 남아 있음).
-- 디자인: 소개 페이지의 색·글자·배치·움직임은 [public/design.css](https://github.com/Won-22/SKT-ALEPH/blob/DESIGNHASH/passkey/public/design.css) 로만 바꿨습니다(1번 HTML 의 글·구조·링크는 그대로이고, 위 "추가만 했다" 확인이 그대로 통과합니다). 강조색은 주황 하나, 라이트·다크 모드와 모바일 화면을 모두 확인했습니다.
+- 1번 소개 페이지: [scripts/build-public.mjs](https://github.com/Won-22/SKT-ALEPH/blob/dea07c7e881c2be98cd8c81f060848f2e34bf5f6/passkey/scripts/build-public.mjs)가 루트 `index.html` 에 **추가 블록 5개**(메뉴 링크 1, 공개 영역 안내 줄, 비공개 영역 구역, CSS 링크(디자인 `design.css` 와 비공개 영역용 `passkey.css`), JS 링크)만 끼워 [public/index.html](https://github.com/Won-22/SKT-ALEPH/blob/dea07c7e881c2be98cd8c81f060848f2e34bf5f6/passkey/public/index.html)을 만듭니다. [scripts/check-public.mjs](https://github.com/Won-22/SKT-ALEPH/blob/dea07c7e881c2be98cd8c81f060848f2e34bf5f6/passkey/scripts/check-public.mjs)로 추가 블록을 빼면 1번 페이지와 **글자 하나까지 같은 것**을 확인했습니다(1번 공개 내용이 그대로 남아 있음).
+- 디자인: 소개 페이지의 색·글자·배치·움직임은 [public/design.css](https://github.com/Won-22/SKT-ALEPH/blob/dea07c7e881c2be98cd8c81f060848f2e34bf5f6/passkey/public/design.css) 로만 바꿨습니다(1번 HTML 의 글·구조·링크는 그대로이고, 위 "추가만 했다" 확인이 그대로 통과합니다). 강조색은 주황 하나, 라이트·다크 모드와 모바일 화면을 모두 확인했습니다.
 - 공개/비공개 구분: 화면에서 초록 "공개 영역" 안내와 빨간 점선의 "비공개 영역" 구역으로 나뉩니다.
 - 비공개 내용은 페이지 소스에 없습니다. 비공개 항목은 로그인한 뒤 서버가 내려 주는 응답으로만 화면에 그려지고(`textContent` 로만 표시), HTML·JS·CSS 어디에도 항목 제목·내용이 들어 있지 않습니다.
-- DB: [schema.sql](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/schema.sql) — `accounts`, `passkeys`(공개키만), `challenges`(일회용 질문), `sessions`, `private_items`.
+- DB: [schema.sql](https://github.com/Won-22/SKT-ALEPH/blob/dea07c7e881c2be98cd8c81f060848f2e34bf5f6/passkey/schema.sql) — `accounts`, `passkeys`(공개키만), `challenges`(일회용 질문), `sessions`, `private_items`.
 
 ## ④ 안 열리는 것을 확인한 기록
 
@@ -67,7 +67,7 @@
 
 - **실제 기기로 확인한 것(배포 사이트, 2026-10-07):** Google 비밀번호 관리자의 패스키로 로그인 → 성공(서버에 처음으로 사용 시각이 기록됨), 같은 화면에서 iCloud 키체인의 패스키(iphone)를 지움 → 하나만 남음, 지운 iCloud 패스키로 로그인 시도 → **거절**, 남은 Google 패스키로 다시 로그인 → **성공**. 등록 때는 `spot-a` 에 iphone(2026-10-06 16:46)과 google(16:50) 두 개가 서버에 저장돼 있었습니다. 단계별 표와 서버 기록은 live-check.md 에 있습니다.
 - **계정 두 개(양방향):** `spot-a` 와 `spot-b` 가 각각 자기 비공개 항목 3개를 가집니다(서로 다른 내용). A 가 B 의 항목·패스키를 지우려는 요청, B 가 A 의 것을 지우려는 요청은 모두 **404**(존재 자체를 감춤), 목록에는 서로의 것이 섞이지 않고, 거절 앞뒤 건수가 같습니다. 주소(`?account_id=`)·헤더(`X-Account-Id`)·본문(`account_id`)에 다른 계정을 적어 보내도 내 자료만 돌아옵니다. 증거 기록의 "카드 5" 장.
-- **거절을 만드는 소스 위치:** [`ownedItem` L231](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/src/worker.js#L231), [`ownedPasskey` L226](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/src/worker.js#L226) 가 남의 것과 없는 것을 구분하지 않고 같은 404 를 던지고, 목록은 `WHERE account_id = ?` 로 걸러집니다.
+- **거절을 만드는 소스 위치:** [`ownedItem` L231](https://github.com/Won-22/SKT-ALEPH/blob/dea07c7e881c2be98cd8c81f060848f2e34bf5f6/passkey/src/worker.js#L231), [`ownedPasskey` L226](https://github.com/Won-22/SKT-ALEPH/blob/dea07c7e881c2be98cd8c81f060848f2e34bf5f6/passkey/src/worker.js#L226) 가 남의 것과 없는 것을 구분하지 않고 같은 404 를 던지고, 목록은 `WHERE account_id = ?` 로 걸러집니다.
 - **패스키 등록(카드 2):** 서버가 등록 질문을 만들어 보내고(요청마다 값이 다름, DB 에 2분 보관), 등록이 끝나면 `passkeys` 표에 **공개키만** 저장됩니다. 등록 요청 본문에는 공개키가 든 응답과 서명만 있고 개인키는 없습니다. 중간에 취소하면 계정·패스키는 저장되지 않고(질문만 남았다가 2분 뒤 지워짐) 화면에 "취소되었거나 시간이 지나서 아무것도 저장되지 않았습니다" 안내가 나옵니다. 패스키에는 사람이 알아볼 수 있는 이름을 붙입니다.
 - **패스키를 저장한 곳(카드 2):** `spot-a` — 첫 번째는 아이폰의 **iCloud 키체인**(이름 `iphone`), 두 번째는 **Google 비밀번호 관리자**(이름 `google`), `spot-b` — 아이폰의 iCloud 키체인(이름 `Iphone Ver.2`). (`spot-a` 의 iphone 패스키는 위 "실제 기기로 확인한 것"에서 일부러 지워 지금은 google 하나가 남아 있습니다.) 개인키는 이 보관 장소 안에만 있고 서버로 오지 않습니다. (이 PC 에서는 Windows PIN 을 쓸 수 없어 Windows Hello 는 쓰지 못했습니다.)
 - **패스키가 하나도 남지 않으면(카드 4):** 서버가 마지막 하나는 지우지 못하게 막습니다(409). 그래서 하나도 안 남는 상태가 생기지 않습니다. 그래도 남은 패스키가 있는 기기·보관 장소를 모두 잃으면 이 자리에 다시 들어올 복구 방법은 없습니다(⑥).
