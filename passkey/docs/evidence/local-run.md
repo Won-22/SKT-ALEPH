@@ -1,66 +1,66 @@
 # T08 패스키 증거 기록 (로컬 서버 · 같은 Worker 코드 · 시험용 가짜 기기)
 
-실행 시각: 2026-10-07T07:15:16.633Z · 계정: `evid-a-58963b`, `evid-b-1f8d15` (이 기록을 위해 만든 검사용 계정) · 세션 값은 앞 4글자만 보이게 가렸고, 길이가 긴 값(attestationObject·signature·공개키)은 앞부분만 보입니다. 비밀번호는 이 시스템에 존재하지 않습니다.
+실행 시각: 2026-10-07T07:15:41.935Z · 계정: `evid-a-b5b50c`, `evid-b-87b21a` (이 기록을 위해 만든 검사용 계정) · 세션 값은 앞 4글자만 보이게 가렸고, 길이가 긴 값(attestationObject·signature·공개키)은 앞부분만 보입니다. 비밀번호는 이 시스템에 존재하지 않습니다.
 
 ## 카드 2 — 패스키 등록
 **1. 등록 질문(challenge) 요청 ①**
 ```
 POST /api/register/options
-본문: {"handle":"evid-a-58963b","passkey_name":"이 PC (Windows Hello)"}
+본문: {"handle":"evid-a-b5b50c","passkey_name":"이 PC (Windows Hello)"}
 → 200
-응답: {"challenge":"ZbJOnmWvD6Vjuo-x_nPJBaE9Ku2uCGl9hiF-A-7_hus","rp":{"name":"전원 — 나만의 자리","id":"pds-passkey.pds-diary.workers.dev"},"user":{"id":"UvDbexIt-OqP3WpWu0nDvg","name":"evid-a-58963b","displayName":"evid-a-58963b"},"pubKeyCredParams":[{"alg":-7,"type":"public-key"},{"alg":-257,"type":"public-key"}],"timeout":60000,"attestation":"none","excludeCredential …(줄임)
+응답: {"challenge":"jy87t0bFMOOUV854jzX7pD-AWqYtNxLQSow7B_tFJHE","rp":{"name":"전원 — 나만의 자리","id":"pds-passkey.pds-diary.workers.dev"},"user":{"id":"x07mitRJpEYGvpDJ7VlzQQ","name":"evid-a-b5b50c","displayName":"evid-a-b5b50c"},"pubKeyCredParams":[{"alg":-7,"type":"public-key"},{"alg":-257,"type":"public-key"}],"timeout":60000,"attestation":"none","excludeCredential …(줄임)
 ```
 **2. 등록 질문 요청 ② (같은 자리 이름으로 다시 요청 — 질문 값이 달라야 함)**
 ```
 POST /api/register/options
-본문: {"handle":"evid-a-58963b","passkey_name":"이 PC (Windows Hello)"}
+본문: {"handle":"evid-a-b5b50c","passkey_name":"이 PC (Windows Hello)"}
 → 200
-응답: {"challenge":"p2Pt7yr2bWk9cJuWklXO_kMjm6ZZrxskjZns0Clom5A","rp":{"name":"전원 — 나만의 자리","id":"pds-passkey.pds-diary.workers.dev"},"user":{"id":"onJBi43--id0g18uonj-Tw","name":"evid-a-58963b","displayName":"evid-a-58963b"},"pubKeyCredParams":[{"alg":-7,"type":"public-key"},{"alg":-257,"type":"public-key"}],"timeout":60000,"attestation":"none","excludeCredential …(줄임)
+응답: {"challenge":"TWusHWdYSk8WfpQ2NaSsMCR7Yp6whNN7IzZpCvpbmtE","rp":{"name":"전원 — 나만의 자리","id":"pds-passkey.pds-diary.workers.dev"},"user":{"id":"FUjUly2ffZjDkKB7OeVhGg","name":"evid-a-b5b50c","displayName":"evid-a-b5b50c"},"pubKeyCredParams":[{"alg":-7,"type":"public-key"},{"alg":-257,"type":"public-key"}],"timeout":60000,"attestation":"none","excludeCredential …(줄임)
 ```
 → 두 질문 값이 서로 다른가: **다르다** · 서버는 질문을 DB 에 보관하고(확인할 때까지, 최대 2분) 확인이 끝나면 지웁니다.
 ### 취소했을 때 (질문만 받고 등록을 마치지 않음)
 **3. 질문만 받고 기기 창에서 취소 → 등록 확인 요청을 보내지 않음**
 ```
 POST /api/register/options
-본문: {"handle":"evid-c-477194","passkey_name":"취소할 패스키"}
+본문: {"handle":"evid-c-a72a54","passkey_name":"취소할 패스키"}
 → 200
-응답: {"challenge":"xbsOaS9BWIB4KHNiL9SzC9Q4i3usMA3PsAGT96TgUwA","rp":{"name":"전원 — 나만의 자리","id":"pds-passkey.pds-diary.workers.dev"},"user":{"id":"2mNRj6ASeoX82pVOBFx3aw","name":"evid-c-477194","displayName":"evid-c-477194"},"pubKeyCredParams":[{"alg":-7,"type":"public-key"},{"alg":-257,"type":"public-key"}],"timeout":60000,"attestation":"none","excludeCredential …(줄임)
+응답: {"challenge":"-RZFGE7Ph2aj9EugwrLePR7XAoBahjN8zswPdOjxSLs","rp":{"name":"전원 — 나만의 자리","id":"pds-passkey.pds-diary.workers.dev"},"user":{"id":"AcfFdhYftRggx4Bp_FDXkg","name":"evid-c-a72a54","displayName":"evid-c-a72a54"},"pubKeyCredParams":[{"alg":-7,"type":"public-key"},{"alg":-257,"type":"public-key"}],"timeout":60000,"attestation":"none","excludeCredential …(줄임)
 ```
-→ 서버에 `evid-c-477194` 계정이 저장됐는가: **저장되지 않았다** · 패스키 수: 0건. 화면에는 "취소되었거나 시간이 지나서 아무것도 저장되지 않았습니다" 안내가 나옵니다.
+→ 서버에 `evid-c-a72a54` 계정이 저장됐는가: **저장되지 않았다** · 패스키 수: 0건. 화면에는 "취소되었거나 시간이 지나서 아무것도 저장되지 않았습니다" 안내가 나옵니다.
 ### 등록 완료
 **4. 등록 확인 요청 (기기가 서명한 공개키와 서명 — 개인키는 없음)**
 ```
 POST /api/register/verify
-본문: {"response":{"id":"PXDDraU4LcBBTbJi52xzM44mq_kG_xfxws6OKM6b_UM","rawId":"PXDDraU4LcBBTbJi52xzM44mq_kG_xfxws6OKM6b…(줄임, 전체 43자)","type":"public-key","authenticatorAttachment":"platform","clientExtensionResults":{},"response":{"clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hh…(줄임, 전체 210자)","attestationObject":"o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YVik…(줄임, 전체 259자)","transports":["internal"]}}}
+본문: {"response":{"id":"eCMv7wTgsgM5GKL-B-EAqraJyL59KJDPTdSOmX6lCx8","rawId":"eCMv7wTgsgM5GKL-B-EAqraJyL59KJDPTdSOmX6l…(줄임, 전체 43자)","type":"public-key","authenticatorAttachment":"platform","clientExtensionResults":{},"response":{"clientDataJSON":"(기기가 서명한 clientData, 210자: 서버가 보낸 질문 값과 이 사이트 주소가 들어 있음)","attestationObject":"o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YVik…(줄임, 전체 259자)","transports":["internal"]}}}
 → 201
-Set-Cookie: sid=3aT8…(가림); Path=/; HttpOnly; SameSite=Strict; Max-Age=604800; Secure
-응답: {"account":{"handle":"evid-a-58963b"},"passkey":{"name":"이 PC (Windows Hello)"},"session_expires_at":"2026-10-14T07:15:16.664Z"}
+Set-Cookie: sid=ZO_V…(가림); Path=/; HttpOnly; SameSite=Strict; Max-Age=604800; Secure
+응답: {"account":{"handle":"evid-a-b5b50c"},"passkey":{"name":"이 PC (Windows Hello)"},"session_expires_at":"2026-10-14T07:15:41.965Z"}
 ```
-→ 요청 본문의 clientDataJSON 을 풀어 보면: `{"type":"webauthn.create","challenge":"p2Pt7yr2bWk9cJuWklXO_kMjm6ZZrxskjZns0Clom5A","origin":"https://pds-passkey.pds-diary.workers.dev","crossOrigin":false}` — 서버가 보낸 질문 값(p2Pt…(가림))과 이 사이트 주소(origin)가 들어 있고, 개인키는 없다.
+→ 요청 본문의 clientDataJSON 을 풀어 보면: `{"type":"webauthn.create","challenge":"TWusHWdYSk8WfpQ2NaSsMCR7Yp6whNN7IzZpCvpbmtE","origin":"https://pds-passkey.pds-diary.workers.dev","crossOrigin":false}` — 서버가 보낸 질문 값(TWus…(가림))과 이 사이트 주소(origin)가 들어 있고, 개인키는 없다.
 - 이 기기의 개인키 값이 서버로 보낸 요청 전체에 들어 있는가: **들어 있지 않다**
 **5. 서버에 저장된 패스키 목록 (이름·등록 날짜·공개키)**
 ```
 GET /api/passkeys
-Cookie: sid=3aT8…(가림)
+Cookie: sid=ZO_V…(가림)
 → 200
-응답: {"rows":[{"id":1,"credential_id":"PXDDraU4LcBBTbJi52xzM44mq_kG_xfxws6OKM6b…(줄임, 전체 43자)","public_key":"pQECAyYgASFYIIfEJ3cIQmiXiwWA_3cC_edYvN4u…(줄임, 전체 103자)","counter":0,"transports":["internal"],"device_type":"singleDevice","backed_up":false,"name":"이 PC (Windows Hello)","created_at":"2026-10-07T07:15:16.664Z","last_used_at":null,"is_current":true}]}
+응답: {"rows":[{"id":1,"credential_id":"eCMv7wTgsgM5GKL-B-EAqraJyL59KJDPTdSOmX6l…(줄임, 전체 43자)","public_key":"pQECAyYgASFYIJpgPnbOAMDi3rJ1C3owoT748AXs…(줄임, 전체 103자)","counter":0,"transports":["internal"],"device_type":"singleDevice","backed_up":false,"name":"이 PC (Windows Hello)","created_at":"2026-10-07T07:15:41.965Z","last_used_at":null,"is_current":true}]}
 ```
 DB 의 passkeys 표에 저장된 값 (공개키이며 비밀번호가 아니다 — 이것만으로는 로그인할 수 없고, 서명을 확인하는 데만 쓰인다):
 ```
-credential_id = PXDDraU4LcBBTbJi52xzM44mq_kG_xfxws6OKM6b_UM
-public_key = pQECAyYgASFYIIfEJ3cIQmiXiwWA_3cC_edYvN4uFvpmFtcHGCBvy8QtIlggPLV6MRG2K74HJlmyRM6iy0Ud5PKRE1…(줄임, 전체 103자)
+credential_id = eCMv7wTgsgM5GKL-B-EAqraJyL59KJDPTdSOmX6lCx8
+public_key = pQECAyYgASFYIJpgPnbOAMDi3rJ1C3owoT748AXsW-6mRnwQvp9hPlF7Ilggo4THymYD3YwIJxr8hOSBTkH5wI6a6B…(줄임, 전체 103자)
 counter = 0
 transports = ["internal"]
 device_type = singleDevice
 backed_up = 0
 name = 이 PC (Windows Hello)
-created_at = 2026-10-07T07:15:16.664Z
+created_at = 2026-10-07T07:15:41.965Z
 ```
 - 패스키 이름: **이 PC (Windows Hello)** (사람이 알아볼 수 있는 이름) · 저장 위치: 개인키는 기기(Windows Hello 등)나 Google 비밀번호 관리자 같은 보관 장소에만 있고 서버에는 없다.
 **6. 이미 쓴 등록 응답을 다시 보냄 → 거절**
 ```
 POST /api/register/verify
-본문: {"response":{"id":"PXDDraU4LcBBTbJi52xzM44mq_kG_xfxws6OKM6b_UM","rawId":"PXDDraU4LcBBTbJi52xzM44mq_kG_xfxws6OKM6b…(줄임, 전체 43자)","type":"public-key","authenticatorAttachment":"platform","clientExtensionResults":{},"response":{"clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hh…(줄임, 전체 210자)","attestationObject":"o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YVik…(줄임, 전체 259자)","transports":["internal"]}}}
+본문: {"response":{"id":"eCMv7wTgsgM5GKL-B-EAqraJyL59KJDPTdSOmX6lCx8","rawId":"eCMv7wTgsgM5GKL-B-EAqraJyL59KJDPTdSOmX6l…(줄임, 전체 43자)","type":"public-key","authenticatorAttachment":"platform","clientExtensionResults":{},"response":{"clientDataJSON":"(기기가 서명한 clientData, 210자: 서버가 보낸 질문 값과 이 사이트 주소가 들어 있음)","attestationObject":"o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YVik…(줄임, 전체 259자)","transports":["internal"]}}}
 → 400
 응답: {"error":"패스키 등록을 확인하지 못했습니다. 처음부터 다시 시도해 주세요."}
 ```
@@ -71,49 +71,49 @@ POST /api/register/verify
 POST /api/login/options
 본문: {}
 → 200
-응답: {"rpId":"pds-passkey.pds-diary.workers.dev","challenge":"r5DTfxUBR2L3isOWl99JzFdYnV6odVTn_sNQIeJkZSc","timeout":60000,"userVerification":"required"}
+응답: {"rpId":"pds-passkey.pds-diary.workers.dev","challenge":"BhfhhQoNrfep8N4i_CrukuygtZi_YSULIGKKqCA9c3Q","timeout":60000,"userVerification":"required"}
 ```
 **8. 로그인 질문 요청 ② (달라야 함)**
 ```
 POST /api/login/options
 본문: {}
 → 200
-응답: {"rpId":"pds-passkey.pds-diary.workers.dev","challenge":"-Aq96ChcauEejb7cXiUZEYrFS5fMdoaDKcmJ_0wp67Y","timeout":60000,"userVerification":"required"}
+응답: {"rpId":"pds-passkey.pds-diary.workers.dev","challenge":"Aok0u91egZn9UfmbBWzK8F4QdSXQ6zabDtKANSHG7os","timeout":60000,"userVerification":"required"}
 ```
 → 두 질문 값이 서로 다른가: **다르다**
 **9. 서명 확인에 성공한 로그인 (서버가 저장해 둔 공개키로 서명을 확인)**
 ```
 POST /api/login/verify
-본문: {"response":{"id":"PXDDraU4LcBBTbJi52xzM44mq_kG_xfxws6OKM6b_UM","rawId":"PXDDraU4LcBBTbJi52xzM44mq_kG_xfxws6OKM6b…(줄임, 전체 43자)","type":"public-key","authenticatorAttachment":"platform","clientExtensionResults":{},"response":{"clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxl…(줄임, 전체 206자)","authenticatorData":"EWWh1JM6WTIlJCZZj-6gTjM_UJgwRIOl7aMyj1Hd…(줄임, 전체 50자)","signature":"MEUCIQCkFe0ZdPRBHWcoqidPVv_eORk0y5EbJUrt…(줄임, 전체 95자)","userHandle":null}}}
+본문: {"response":{"id":"eCMv7wTgsgM5GKL-B-EAqraJyL59KJDPTdSOmX6lCx8","rawId":"eCMv7wTgsgM5GKL-B-EAqraJyL59KJDPTdSOmX6l…(줄임, 전체 43자)","type":"public-key","authenticatorAttachment":"platform","clientExtensionResults":{},"response":{"clientDataJSON":"(기기가 서명한 clientData, 206자: 서버가 보낸 질문 값과 이 사이트 주소가 들어 있음)","authenticatorData":"EWWh1JM6WTIlJCZZj-6gTjM_UJgwRIOl7aMyj1Hd…(줄임, 전체 50자)","signature":"MEUCIBds6vHhDpm9eBxRDVe3lQ2FAUpQe2tTq6T0…(줄임, 전체 95자)","userHandle":null}}}
 → 200
-Set-Cookie: sid=tjXw…(가림); Path=/; HttpOnly; SameSite=Strict; Max-Age=604800; Secure
-응답: {"account":{"handle":"evid-a-58963b"},"session_expires_at":"2026-10-14T07:15:16.670Z"}
+Set-Cookie: sid=O7wI…(가림); Path=/; HttpOnly; SameSite=Strict; Max-Age=604800; Secure
+응답: {"account":{"handle":"evid-a-b5b50c"},"session_expires_at":"2026-10-14T07:15:41.972Z"}
 ```
 **10. 로그인한 상태로 비공개 자리 요청 → 성공**
 ```
 GET /api/private/items
-Cookie: sid=tjXw…(가림)
+Cookie: sid=O7wI…(가림)
 → 200
 응답: {"rows":[]}
 ```
 **11. 일부러 틀린 서명으로 로그인 → 거절**
 ```
 POST /api/login/verify
-본문: {"response":{"id":"PXDDraU4LcBBTbJi52xzM44mq_kG_xfxws6OKM6b_UM","rawId":"PXDDraU4LcBBTbJi52xzM44mq_kG_xfxws6OKM6b…(줄임, 전체 43자)","type":"public-key","authenticatorAttachment":"platform","clientExtensionResults":{},"response":{"clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxl…(줄임, 전체 206자)","authenticatorData":"EWWh1JM6WTIlJCZZj-6gTjM_UJgwRIOl7aMyj1Hd…(줄임, 전체 50자)","signature":"MEQCIFlvafBMTgsLQS-TolGlRCF85Up4vXOhxHO0…(줄임, 전체 94자)","userHandle":null}}}
+본문: {"response":{"id":"eCMv7wTgsgM5GKL-B-EAqraJyL59KJDPTdSOmX6lCx8","rawId":"eCMv7wTgsgM5GKL-B-EAqraJyL59KJDPTdSOmX6l…(줄임, 전체 43자)","type":"public-key","authenticatorAttachment":"platform","clientExtensionResults":{},"response":{"clientDataJSON":"(기기가 서명한 clientData, 206자: 서버가 보낸 질문 값과 이 사이트 주소가 들어 있음)","authenticatorData":"EWWh1JM6WTIlJCZZj-6gTjM_UJgwRIOl7aMyj1Hd…(줄임, 전체 50자)","signature":"MEUCIQDXYDSkZz5QFn7JMRoM5zJHxWzNJT6FhQN3…(줄임, 전체 95자)","userHandle":null}}}
 → 401
 응답: {"error":"패스키 확인에 실패했습니다."}
 ```
 **12. 이미 쓴 질문(위 성공 로그인의 서명 응답)으로 다시 로그인 → 거절**
 ```
 POST /api/login/verify
-본문: {"response":{"id":"PXDDraU4LcBBTbJi52xzM44mq_kG_xfxws6OKM6b_UM","rawId":"PXDDraU4LcBBTbJi52xzM44mq_kG_xfxws6OKM6b…(줄임, 전체 43자)","type":"public-key","authenticatorAttachment":"platform","clientExtensionResults":{},"response":{"clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxl…(줄임, 전체 206자)","authenticatorData":"EWWh1JM6WTIlJCZZj-6gTjM_UJgwRIOl7aMyj1Hd…(줄임, 전체 50자)","signature":"MEUCIQCkFe0ZdPRBHWcoqidPVv_eORk0y5EbJUrt…(줄임, 전체 95자)","userHandle":null}}}
+본문: {"response":{"id":"eCMv7wTgsgM5GKL-B-EAqraJyL59KJDPTdSOmX6lCx8","rawId":"eCMv7wTgsgM5GKL-B-EAqraJyL59KJDPTdSOmX6l…(줄임, 전체 43자)","type":"public-key","authenticatorAttachment":"platform","clientExtensionResults":{},"response":{"clientDataJSON":"(기기가 서명한 clientData, 206자: 서버가 보낸 질문 값과 이 사이트 주소가 들어 있음)","authenticatorData":"EWWh1JM6WTIlJCZZj-6gTjM_UJgwRIOl7aMyj1Hd…(줄임, 전체 50자)","signature":"MEUCIBds6vHhDpm9eBxRDVe3lQ2FAUpQe2tTq6T0…(줄임, 전체 95자)","userHandle":null}}}
 → 401
 응답: {"error":"패스키 확인에 실패했습니다."}
 ```
 **13. 같은 질문에 새로 서명해서 다시 보냄 → 거절 (질문은 처음 확인할 때 이미 지워짐)**
 ```
 POST /api/login/verify
-본문: {"response":{"id":"PXDDraU4LcBBTbJi52xzM44mq_kG_xfxws6OKM6b_UM","rawId":"PXDDraU4LcBBTbJi52xzM44mq_kG_xfxws6OKM6b…(줄임, 전체 43자)","type":"public-key","authenticatorAttachment":"platform","clientExtensionResults":{},"response":{"clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxl…(줄임, 전체 206자)","authenticatorData":"EWWh1JM6WTIlJCZZj-6gTjM_UJgwRIOl7aMyj1Hd…(줄임, 전체 50자)","signature":"MEUCIC9ZQDs6skDBXLt4gsVR19w0Zo1G50-ZGwnc…(줄임, 전체 95자)","userHandle":null}}}
+본문: {"response":{"id":"eCMv7wTgsgM5GKL-B-EAqraJyL59KJDPTdSOmX6lCx8","rawId":"eCMv7wTgsgM5GKL-B-EAqraJyL59KJDPTdSOmX6l…(줄임, 전체 43자)","type":"public-key","authenticatorAttachment":"platform","clientExtensionResults":{},"response":{"clientDataJSON":"(기기가 서명한 clientData, 206자: 서버가 보낸 질문 값과 이 사이트 주소가 들어 있음)","authenticatorData":"EWWh1JM6WTIlJCZZj-6gTjM_UJgwRIOl7aMyj1Hd…(줄임, 전체 50자)","signature":"MEUCIDuZ1IZpFiS1SuP1SGFx73Lg93rvyzALf2u6…(줄임, 전체 95자)","userHandle":null}}}
 → 401
 응답: {"error":"패스키 확인에 실패했습니다."}
 ```
@@ -122,7 +122,7 @@ POST /api/login/verify
 **14. 로그아웃**
 ```
 POST /api/logout
-Cookie: sid=tjXw…(가림)
+Cookie: sid=O7wI…(가림)
 → 200
 Set-Cookie: sid=(비어 있음 = 삭제); Path=/; HttpOnly; SameSite=Strict; Max-Age=0; Secure
 응답: {"ok":true}
@@ -130,70 +130,70 @@ Set-Cookie: sid=(비어 있음 = 삭제); Path=/; HttpOnly; SameSite=Strict; Max
 **15. 로그아웃한 뒤 같은 값으로 같은 요청 → 거절**
 ```
 GET /api/private/items
-Cookie: sid=tjXw…(가림)
+Cookie: sid=O7wI…(가림)
 → 401
 응답: {"error":"로그인이 필요합니다."}
 ```
-→ 두 요청은 주소(`GET /api/private/items`)와 쿠키 값(`sid=tjXw…(가림)`)이 같고 다른 것은 로그아웃 여부뿐이다: 성공 200 / 거절 401
+→ 두 요청은 주소(`GET /api/private/items`)와 쿠키 값(`sid=O7wI…(가림)`)이 같고 다른 것은 로그아웃 여부뿐이다: 성공 200 / 거절 401
 - 로그인 뒤 사람을 알아보는 것: 서버가 발급한 무작위 **세션 값**(쿠키 `sid`, HttpOnly·SameSite=Strict·Secure, 7일). 서버 DB 에는 그 값의 SHA-256 만 있다. 주소창·응답 본문에는 실리지 않는다.
 
 ## 카드 4 — 기기를 잃어버렸을 때
 **16. 두 번째 패스키 등록 질문 (이미 등록한 기기는 제외하라고 알려 줌)**
 ```
 POST /api/passkeys/options
-Cookie: sid=Rs2K…(가림)
+Cookie: sid=An1n…(가림)
 본문: {"passkey_name":"휴대폰 (Google 비밀번호 관리자)"}
 → 200
-응답: {"challenge":"zOn1cARUnKLut3WW8D-8QOxqCrkHw-It7zIavLwsU30","rp":{"name":"전원 — 나만의 자리","id":"pds-passkey.pds-diary.workers.dev"},"user":{"id":"onJBi43--id0g18uonj-Tw","name":"evid-a-58963b","displayName":"evid-a-58963b"},"pubKeyCredParams":[{"alg":-7,"type":"public-key"},{"alg":-257,"type":"public-key"}],"timeout":60000,"attestation":"none","excludeCredential …(줄임)
+응답: {"challenge":"fROUBAsJ4zdryA3-XtRhR0xNzzlKsy7n4qP7IZUJruk","rp":{"name":"전원 — 나만의 자리","id":"pds-passkey.pds-diary.workers.dev"},"user":{"id":"FUjUly2ffZjDkKB7OeVhGg","name":"evid-a-b5b50c","displayName":"evid-a-b5b50c"},"pubKeyCredParams":[{"alg":-7,"type":"public-key"},{"alg":-257,"type":"public-key"}],"timeout":60000,"attestation":"none","excludeCredential …(줄임)
 ```
 → excludeCredentials 에 첫 패스키가 들어 있다: **예** — 같은 기기에 같은 패스키가 두 번 등록되지 않게 합니다.
 **17. 두 번째 패스키 등록 확인**
 ```
 POST /api/passkeys/verify
-Cookie: sid=Rs2K…(가림)
-본문: {"response":{"id":"XbavZQBNTEuIyTOKIPvsSI48KVMrrTY-60WMalYA2f8","rawId":"XbavZQBNTEuIyTOKIPvsSI48KVMrrTY-60WMalYA…(줄임, 전체 43자)","type":"public-key","authenticatorAttachment":"platform","clientExtensionResults":{},"response":{"clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hh…(줄임, 전체 210자)","attestationObject":"o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YVik…(줄임, 전체 259자)","transports":["internal"]}}}
+Cookie: sid=An1n…(가림)
+본문: {"response":{"id":"6H1KbGPCxIKPBt2wiRN6mrWMgo8sBknaF7_YqW0GbgM","rawId":"6H1KbGPCxIKPBt2wiRN6mrWMgo8sBknaF7_YqW0G…(줄임, 전체 43자)","type":"public-key","authenticatorAttachment":"platform","clientExtensionResults":{},"response":{"clientDataJSON":"(기기가 서명한 clientData, 210자: 서버가 보낸 질문 값과 이 사이트 주소가 들어 있음)","attestationObject":"o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YVik…(줄임, 전체 259자)","transports":["internal"]}}}
 → 200
-응답: {"rows":[{"id":1,"credential_id":"PXDDraU4LcBBTbJi52xzM44mq_kG_xfxws6OKM6b…(줄임, 전체 43자)","public_key":"pQECAyYgASFYIIfEJ3cIQmiXiwWA_3cC_edYvN4u…(줄임, 전체 103자)","counter":5,"transports":["internal"],"device_type":"singleDevice","backed_up":false,"name":"이 PC (Windows Hello)","created_at":"2026-10-07T07:15:16.664Z","last_used_at":"2026-10-07T07:15:16.676Z","is_ …(줄임)
+응답: {"rows":[{"id":1,"credential_id":"eCMv7wTgsgM5GKL-B-EAqraJyL59KJDPTdSOmX6l…(줄임, 전체 43자)","public_key":"pQECAyYgASFYIJpgPnbOAMDi3rJ1C3owoT748AXs…(줄임, 전체 103자)","counter":5,"transports":["internal"],"device_type":"singleDevice","backed_up":false,"name":"이 PC (Windows Hello)","created_at":"2026-10-07T07:15:41.965Z","last_used_at":"2026-10-07T07:15:41.977Z","is_ …(줄임)
 ```
 **18. 패스키 두 개가 보이는 목록**
 ```
 GET /api/passkeys
-Cookie: sid=Rs2K…(가림)
+Cookie: sid=An1n…(가림)
 → 200
-응답: {"rows":[{"id":1,"credential_id":"PXDDraU4LcBBTbJi52xzM44mq_kG_xfxws6OKM6b…(줄임, 전체 43자)","public_key":"pQECAyYgASFYIIfEJ3cIQmiXiwWA_3cC_edYvN4u…(줄임, 전체 103자)","counter":5,"transports":["internal"],"device_type":"singleDevice","backed_up":false,"name":"이 PC (Windows Hello)","created_at":"2026-10-07T07:15:16.664Z","last_used_at":"2026-10-07T07:15:16.676Z","is_ …(줄임)
+응답: {"rows":[{"id":1,"credential_id":"eCMv7wTgsgM5GKL-B-EAqraJyL59KJDPTdSOmX6l…(줄임, 전체 43자)","public_key":"pQECAyYgASFYIJpgPnbOAMDi3rJ1C3owoT748AXs…(줄임, 전체 103자)","counter":5,"transports":["internal"],"device_type":"singleDevice","backed_up":false,"name":"이 PC (Windows Hello)","created_at":"2026-10-07T07:15:41.965Z","last_used_at":"2026-10-07T07:15:41.977Z","is_ …(줄임)
 ```
 **19. 휴대폰 패스키로 로그인한 상태에서 첫 패스키(이 PC)를 지움**
 ```
 DELETE /api/passkeys/1
-Cookie: sid=e9Cx…(가림)
+Cookie: sid=2h67…(가림)
 → 200
 응답: {"deleted":1,"remaining":1}
 ```
 **20. 남은 하나(휴대폰)로 자료 열기 → 성공**
 ```
 GET /api/private/items
-Cookie: sid=e9Cx…(가림)
+Cookie: sid=2h67…(가림)
 → 200
 응답: {"rows":[]}
 ```
 **21. 지운 패스키로 로그인 → 거절 (기기에 키가 남아 있어도 서버가 모름)**
 ```
 POST /api/login/verify
-본문: {"response":{"id":"PXDDraU4LcBBTbJi52xzM44mq_kG_xfxws6OKM6b_UM","rawId":"PXDDraU4LcBBTbJi52xzM44mq_kG_xfxws6OKM6b…(줄임, 전체 43자)","type":"public-key","authenticatorAttachment":"platform","clientExtensionResults":{},"response":{"clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxl…(줄임, 전체 206자)","authenticatorData":"EWWh1JM6WTIlJCZZj-6gTjM_UJgwRIOl7aMyj1Hd…(줄임, 전체 50자)","signature":"MEUCIQCTq4E2n1oJzKyNRiVJe9cUIVHckkrFa0Gy…(줄임, 전체 95자)","userHandle":null}}}
+본문: {"response":{"id":"eCMv7wTgsgM5GKL-B-EAqraJyL59KJDPTdSOmX6lCx8","rawId":"eCMv7wTgsgM5GKL-B-EAqraJyL59KJDPTdSOmX6l…(줄임, 전체 43자)","type":"public-key","authenticatorAttachment":"platform","clientExtensionResults":{},"response":{"clientDataJSON":"(기기가 서명한 clientData, 206자: 서버가 보낸 질문 값과 이 사이트 주소가 들어 있음)","authenticatorData":"EWWh1JM6WTIlJCZZj-6gTjM_UJgwRIOl7aMyj1Hd…(줄임, 전체 50자)","signature":"MEYCIQC4XcnygrJsfmYy3_V3WUUU_TSe9KjMGxB6…(줄임, 전체 96자)","userHandle":null}}}
 → 401
 응답: {"error":"패스키 확인에 실패했습니다."}
 ```
 **22. 지운 패스키로 이미 열어 둔 세션도 끊김 → 거절**
 ```
 GET /api/private/items
-Cookie: sid=uEse…(가림)
+Cookie: sid=WxH2…(가림)
 → 401
 응답: {"error":"로그인이 필요합니다."}
 ```
 **23. 마지막 하나를 지우려 함 → 거절 (하나도 안 남는 일이 없게 서버가 막음)**
 ```
 DELETE /api/passkeys/2
-Cookie: sid=e9Cx…(가림)
+Cookie: sid=2h67…(가림)
 → 409
 응답: {"error":"마지막 패스키는 지울 수 없습니다. 하나도 없으면 이 자리에 다시 들어올 방법이 없습니다. 먼저 다른 패스키를 하나 더 등록하세요."}
 ```
@@ -203,32 +203,32 @@ Cookie: sid=e9Cx…(가림)
 **24. 계정 B 만들기 (패스키 등록)**
 ```
 POST /api/register/verify
-본문: {"response":{"id":"eojFrzIkfC07DVMMn9lDtj28ZntZ4N5ovwXdux91AUA","rawId":"eojFrzIkfC07DVMMn9lDtj28ZntZ4N5ovwXdux91…(줄임, 전체 43자)","type":"public-key","authenticatorAttachment":"platform","clientExtensionResults":{},"response":{"clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hh…(줄임, 전체 210자)","attestationObject":"o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YVik…(줄임, 전체 259자)","transports":["internal"]}}}
+본문: {"response":{"id":"GJL40m53_wA_6yn8mQWQ5Ib82e0hCzPp-2QWwMwhkE0","rawId":"GJL40m53_wA_6yn8mQWQ5Ib82e0hCzPp-2QWwMwh…(줄임, 전체 43자)","type":"public-key","authenticatorAttachment":"platform","clientExtensionResults":{},"response":{"clientDataJSON":"(기기가 서명한 clientData, 210자: 서버가 보낸 질문 값과 이 사이트 주소가 들어 있음)","attestationObject":"o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YVik…(줄임, 전체 259자)","transports":["internal"]}}}
 → 201
-Set-Cookie: sid=_O5q…(가림); Path=/; HttpOnly; SameSite=Strict; Max-Age=604800; Secure
-응답: {"account":{"handle":"evid-b-1f8d15"},"passkey":{"name":"B 의 패스키"},"session_expires_at":"2026-10-14T07:15:16.684Z"}
+Set-Cookie: sid=jrCU…(가림); Path=/; HttpOnly; SameSite=Strict; Max-Age=604800; Secure
+응답: {"account":{"handle":"evid-b-87b21a"},"passkey":{"name":"B 의 패스키"},"session_expires_at":"2026-10-14T07:15:41.986Z"}
 ```
 거절 시도 전 건수: A = {"items":2,"passkeys":1}, B = {"items":2,"passkeys":1}
 ### 성공한 요청 (자기 자료)
 **25. A 가 자기 비공개 목록 읽기 → 성공**
 ```
 GET /api/private/items
-Cookie: sid=e9Cx…(가림)
+Cookie: sid=2h67…(가림)
 → 200
-응답: {"rows":[{"id":1,"title":"A-메모: 포트폴리오 개편 계획","body":"A 만의 내용(만들어 넣은 내용)","created_at":"2026-10-07T07:15:16.684Z"},{"id":2,"title":"A-지원 목록: 가상회사 알파","body":"A 만의 내용(만들어 넣은 내용)","created_at":"2026-10-07T07:15:16.685Z"}]}
+응답: {"rows":[{"id":1,"title":"A-메모: 포트폴리오 개편 계획","body":"A 만의 내용(만들어 넣은 내용)","created_at":"2026-10-07T07:15:41.986Z"},{"id":2,"title":"A-지원 목록: 가상회사 알파","body":"A 만의 내용(만들어 넣은 내용)","created_at":"2026-10-07T07:15:41.986Z"}]}
 ```
 ### A 가 B 의 자료를 건드리는 요청
 **26. A → B 의 비공개 항목 지우기**
 ```
 DELETE /api/private/items/3
-Cookie: sid=e9Cx…(가림)
+Cookie: sid=2h67…(가림)
 → 404
 응답: {"error":"항목을 찾을 수 없습니다."}
 ```
 **27. A → B 의 패스키 지우기**
 ```
 DELETE /api/passkeys/3
-Cookie: sid=e9Cx…(가림)
+Cookie: sid=2h67…(가림)
 → 404
 응답: {"error":"패스키를 찾을 수 없습니다."}
 ```
@@ -236,34 +236,34 @@ Cookie: sid=e9Cx…(가림)
 **28. B → A 의 비공개 항목 지우기**
 ```
 DELETE /api/private/items/1
-Cookie: sid=_O5q…(가림)
+Cookie: sid=jrCU…(가림)
 → 404
 응답: {"error":"항목을 찾을 수 없습니다."}
 ```
 **29. B → A 의 패스키 지우기**
 ```
 DELETE /api/passkeys/2
-Cookie: sid=_O5q…(가림)
+Cookie: sid=jrCU…(가림)
 → 404
 응답: {"error":"패스키를 찾을 수 없습니다."}
 ```
 ### 주소·헤더·본문에 다른 계정을 적어 보냄
 **30. 주소(?account_id=, ?handle=)와 헤더(X-Account-Id, X-Handle)에 B 를 적은 A 의 요청**
 ```
-GET /api/private/items?account_id=2&handle=evid-b-1f8d15
-Cookie: sid=e9Cx…(가림)
+GET /api/private/items?account_id=2&handle=evid-b-87b21a
+Cookie: sid=2h67…(가림)
 x-account-id: 2
-x-handle: evid-b-1f8d15
+x-handle: evid-b-87b21a
 → 200
-응답: {"rows":[{"id":1,"title":"A-메모: 포트폴리오 개편 계획","body":"A 만의 내용(만들어 넣은 내용)","created_at":"2026-10-07T07:15:16.684Z"},{"id":2,"title":"A-지원 목록: 가상회사 알파","body":"A 만의 내용(만들어 넣은 내용)","created_at":"2026-10-07T07:15:16.685Z"}]}
+응답: {"rows":[{"id":1,"title":"A-메모: 포트폴리오 개편 계획","body":"A 만의 내용(만들어 넣은 내용)","created_at":"2026-10-07T07:15:41.986Z"},{"id":2,"title":"A-지원 목록: 가상회사 알파","body":"A 만의 내용(만들어 넣은 내용)","created_at":"2026-10-07T07:15:41.986Z"}]}
 ```
 **31. 본문에 account_id/handle 을 B 로 적어 항목 만들기**
 ```
 POST /api/private/items
-Cookie: sid=e9Cx…(가림)
-본문: {"title":"A가 만든 항목(본문에 B 적음)","body":"x","account_id":2,"handle":"evid-b-1f8d15"}
+Cookie: sid=2h67…(가림)
+본문: {"title":"A가 만든 항목(본문에 B 적음)","body":"x","account_id":2,"handle":"evid-b-87b21a"}
 → 200
-응답: {"id":5,"title":"A가 만든 항목(본문에 B 적음)","body":"x","created_at":"2026-10-07T07:15:16.689Z"}
+응답: {"id":5,"title":"A가 만든 항목(본문에 B 적음)","body":"x","created_at":"2026-10-07T07:15:41.990Z"}
 ```
 → 그 항목이 B 목록에 생겼는가: **없다(정상)** (A 의 항목으로만 저장됨)
 ### 패스키 없이 직접 요청

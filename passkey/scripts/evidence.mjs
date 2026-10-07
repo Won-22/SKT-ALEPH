@@ -19,7 +19,7 @@ const mask = (v) => (v && v.length > 6 ? v.slice(0, 4) + '…(가림)' : v);
 const cut = (s, n = 70) => (typeof s === 'string' && s.length > n ? s.slice(0, n) + `…(줄임, 전체 ${s.length}자)` : s);
 
 function shownBody(o) {
-  return JSON.stringify(o, (k, v) => (typeof v === 'string' && ['clientDataJSON', 'attestationObject', 'authenticatorData', 'signature', 'public_key', 'credential_id', 'rawId'].includes(k) ? cut(v, 40) : v));
+  return JSON.stringify(o, (k, v) => (typeof v === 'string' && k === 'clientDataJSON' ? '(기기가 서명한 clientData, ' + v.length + '자: 서버가 보낸 질문 값과 이 사이트 주소가 들어 있음)' : typeof v === 'string' && ['attestationObject', 'authenticatorData', 'signature', 'public_key', 'credential_id', 'rawId'].includes(k) ? cut(v, 40) : v));
 }
 let n = 0;
 async function call(label, jar, method, path, body, opts = {}) {
