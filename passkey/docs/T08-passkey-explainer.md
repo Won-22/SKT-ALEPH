@@ -55,7 +55,7 @@
 
 ## ④ 안 열리는 것을 확인한 기록
 
-전체 요청·응답 원문(세션 값 가림)은 [docs/evidence/local-run.md](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/docs/evidence/local-run.md) 에 있습니다. 같은 Worker 코드를 로컬에서 시험용 가짜 기기로 돌린 결과이고, 배포된 사이트에서 내 실제 기기(아이폰의 iCloud 키체인, Google 비밀번호 관리자)로 한 확인은 [docs/evidence/live-check.md](https://github.com/Won-22/SKT-ALEPH/blob/729f6086361743ff2ecacf561a7cb58b7d4499da/passkey/docs/evidence/live-check.md) 에 있습니다. 아래 표의 상태 코드는 로컬 증거 기록에서 확인한 값이고, 네 가지 확인마다 성공한 요청과 거절된 요청을 나란히 적습니다.
+전체 요청·응답 원문(세션 값 가림)은 [docs/evidence/local-run.md](https://github.com/Won-22/SKT-ALEPH/blob/77d569921df3fa63dd6d606d684f929a465ac724/passkey/docs/evidence/local-run.md) 에 있습니다. 같은 Worker 코드를 로컬에서 시험용 가짜 기기로 돌린 결과이고, 배포된 사이트에서 내 실제 기기(아이폰의 iCloud 키체인, Google 비밀번호 관리자)로 한 확인은 [docs/evidence/live-check.md](https://github.com/Won-22/SKT-ALEPH/blob/729f6086361743ff2ecacf561a7cb58b7d4499da/passkey/docs/evidence/live-check.md) 에 있습니다. 아래 표의 상태 코드는 로컬 증거 기록에서 확인한 값이고, 네 가지 확인마다 성공한 요청과 거절된 요청을 나란히 적습니다.
 
 | # | 확인 | 성공한 요청 | 거절된 요청 |
 |---|---|---|---|
