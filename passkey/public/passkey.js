@@ -76,51 +76,62 @@
 
   const msg = (kind, text) => h('p', { class: 'pv-msg ' + kind, role: kind === 'err' ? 'alert' : 'status', text });
   function field(label, input) { return h('label', {}, label, input); }
+  function deviceName() {
+    const u = navigator.userAgent;
+    const os = /iPhone|iPad/.test(u) ? 'iPhone' : /Android/.test(u) ? 'Android' : /Windows/.test(u) ? 'Windows PC' : /Mac/.test(u) ? 'Mac' : '내 기기';
+    const br = /Edg\//.test(u) ? 'Edge' : /Chrome\//.test(u) ? 'Chrome' : /Safari\//.test(u) ? 'Safari' : '';
+    return (os + (br ? ' ' + br : '')).slice(0, 30);
+  }
+  async function pending(btn, label, fn) {
+    const old = btn.textContent;
+    btn.disabled = true; btn.textContent = label;
+    try { await fn(); } finally { btn.disabled = false; btn.textContent = old; }
+  }
 
   // ---- 로그인 전 화면 ----
   function showLoggedOut(note) {
     const out = h('div', {});
     const say = (kind, text) => fill(out, text ? msg(kind, text) : null);
     const handle = h('input', { type: 'text', maxlength: 30, autocomplete: 'off', autocapitalize: 'none', spellcheck: 'false', placeholder: '예: my-spot' });
-    const name = h('input', { type: 'text', maxlength: 30, placeholder: '예: 이 PC (Windows Hello)', value: '' });
+    const name = h('input', { type: 'text', maxlength: 30, value: deviceName() });
     const unsupported = !supported() ? msg('err', '이 브라우저·주소에서는 패스키를 쓸 수 없습니다. https 주소(또는 localhost)에서 최신 브라우저로 열어 주세요.') : null;
 
-    async function doLogin() {
+    const doLogin = (e) => pending(e.currentTarget, '확인 중…', async () => {
       say('info', '기기의 확인 창(PIN·지문·얼굴·보안 키)을 기다리는 중…');
       try {
         const options = await api('POST', '/login/options', {});
         const response = await getAssertion(options);
         await api('POST', '/login/verify', { response });
-        await load();
-      } catch (e) { say('err', e.status ? e.message : friendly(e)); }
-    }
-    async function doRegister() {
+        await load('패스키로 들어왔습니다. 이 자리는 나만 볼 수 있습니다.');
+      } catch (err) { say('err', err.status ? err.message : friendly(err)); }
+    });
+    const doRegister = (e) => pending(e.currentTarget, '만드는 중…', async () => {
       say('info', '기기의 확인 창을 기다리는 중… 취소하면 아무것도 저장되지 않습니다.');
       try {
         const options = await api('POST', '/register/options', { handle: handle.value, passkey_name: name.value });
         const response = await createPasskey(options);
         await api('POST', '/register/verify', { response });
-        await load();
-      } catch (e) { say('err', e.status ? e.message : friendly(e)); }
-    }
+        await load('새 자리를 만들었습니다. 이제 이 기기의 패스키로 들어올 수 있습니다.');
+      } catch (err) { say('err', err.status ? err.message : friendly(err)); }
+    });
 
     fill(view,
-      note ? msg('info', note) : null,
+      note ? msg(/들어왔|만들었/.test(note) ? 'ok' : 'info', note) : null,
       unsupported,
-      h('div', { class: 'pv-card' },
+      h('div', { class: 'pv-card pv-primary' },
         h('h3', { text: '패스키로 들어가기' }),
         h('p', { class: 'pv-muted', text: '비밀번호는 없습니다. 서버가 매번 새 질문을 보내고, 이 기기가 개인키로 서명해 답합니다.' }),
         h('div', { class: 'pv-row' }, h('button', { class: 'pv-btn', type: 'button', text: '패스키로 들어가기', onclick: doLogin }))),
-      h('div', { class: 'pv-card' },
-        h('h3', { text: '새 자리 만들기 (패스키 등록)' }),
+      h('details', { class: 'pv-card pv-details', open: note && /만들/.test(note) ? false : null },
+        h('summary', { text: '처음이신가요? 새 자리 만들기 (패스키 등록)' }),
         h('p', { class: 'pv-muted', text: '자리 이름을 정하고 패스키를 만들면 이 기기가 키 한 쌍을 만듭니다. 서버에는 공개키만 저장되고, 개인키는 기기 밖으로 나오지 않습니다.' }),
-        h('div', { class: 'pv-row' }, field('자리 이름 (영문 소문자·숫자·._-, 3~30자)', handle), field('이 패스키의 이름 (알아볼 수 있게)', name)),
+        h('div', { class: 'pv-row' }, field('자리 이름 (영문 소문자·숫자·._-, 3~30자)', handle), field('이 패스키의 이름 (바꿀 수 있습니다)', name)),
         h('div', { class: 'pv-row' }, h('button', { class: 'pv-btn line', type: 'button', text: '패스키 만들고 시작', onclick: doRegister }))),
       out);
   }
 
   // ---- 로그인 뒤 화면 ----
-  async function showLoggedIn(me) {
+  async function showLoggedIn(me, note) {
     const [items, keys] = await Promise.all([api('GET', '/private/items'), api('GET', '/passkeys')]);
     const out = h('div', {});
     const say = (kind, text) => fill(out, text ? msg(kind, text) : null);
@@ -139,18 +150,19 @@
       try { await api('POST', '/private/items', { title: title.value, body: body.value }); await reload(); } catch (err) { say('err', err.message); }
     } }, h('div', { class: 'pv-row' }, field('제목', title), field('내용', body)), h('div', { class: 'pv-row' }, h('button', { class: 'pv-btn line small', type: 'submit', text: '항목 추가' })));
 
-    const pname = h('input', { type: 'text', maxlength: 30, placeholder: '예: 휴대폰 (Google 비밀번호 관리자)' });
-    async function addPasskey() {
+    const pname = h('input', { type: 'text', maxlength: 30, placeholder: '예: 아이폰, Google 비밀번호 관리자' });
+    const addPasskey = (ev) => pending(ev.currentTarget, '추가하는 중…', async () => {
       say('info', '기기의 확인 창을 기다리는 중… 취소하면 아무것도 저장되지 않습니다.');
       try {
-        const options = await api('POST', '/passkeys/options', { passkey_name: pname.value });
+        const options = await api('POST', '/passkeys/options', { passkey_name: pname.value.trim() || deviceName() });
         const response = await createPasskey(options);
         await api('POST', '/passkeys/verify', { response });
-        await reload();
+        await load('패스키를 하나 더 등록했습니다. 기기를 잃어버려도 남은 패스키로 들어올 수 있습니다.');
       } catch (e) { say('err', e.status ? e.message : friendly(e)); }
-    }
+    });
 
     fill(view,
+      note ? msg('ok', note) : null,
       h('div', { class: 'pv-card' },
         h('div', { class: 'pv-top' },
           h('p', {}, h('strong', { text: me.account.handle }), ' 님의 자리 · 이 로그인은 ' + fmtKST(me.session.expires_at) + ' 에 끊깁니다(' + me.session.ttl_days + '일).'),
@@ -177,7 +189,7 @@
   async function load(note) {
     try {
       const me = await api('GET', '/session');
-      if (me.account) await showLoggedIn(me); else showLoggedOut(note);
+      if (me.account) await showLoggedIn(me, note); else showLoggedOut(note);
     } catch (e) { fill(view, msg('err', e.message)); }
   }
   load();
