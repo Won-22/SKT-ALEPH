@@ -20,7 +20,7 @@ const area = block('private', `
       <div id="private-view" aria-live="polite"><p class="pv-muted">불러오는 중…</p></div>
     </section>
 `);
-const css = block('css', '\n<link rel="stylesheet" href="design.css">\n<link rel="stylesheet" href="passkey.css">\n');
+const css = block('css', '\n<link rel="stylesheet" href="passkey.css">\n<link rel="stylesheet" href="design.css">\n');
 const js = block('js', '\n  <script src="passkey.js" defer></script>\n');
 
 function insertOnce(html, anchor, text, where) {

@@ -12,15 +12,15 @@
 .pv-card h3{margin:0 0 8px;font-size:1.05rem}
 .pv-muted{color:var(--ink-soft);font-size:.92rem}
 .pv-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
-.pv-row label{display:grid;gap:4px;font-size:.85rem;color:var(--ink-soft);flex:1 1 200px}
-.pv-row input,.pv-row textarea{font:inherit;padding:9px 12px;border:1px solid var(--border);border-radius:10px;width:100%;background:#fff;color:var(--ink)}
+.pv-row label{display:grid;gap:4px;font-size:.875rem;color:var(--ink-soft);flex:1 1 200px}
+.pv-row input,.pv-row textarea{font:inherit;padding:9px 12px;border:1px solid var(--border);border-radius:12px;width:100%;background:var(--surface);color:var(--ink)}
 .pv-btn{font:inherit;font-weight:700;padding:10px 18px;border-radius:999px;border:1.5px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer}
 .pv-btn:hover{background:var(--accent-dark);border-color:var(--accent-dark)}
 .pv-btn.line{background:transparent;color:var(--accent)}
 .pv-btn.line:hover{background:var(--accent);color:#fff}
 .pv-btn.danger{background:transparent;border-color:var(--dot-private);color:#a11}
 .pv-btn.danger:hover{background:var(--dot-private);color:#fff}
-.pv-btn.small{padding:5px 12px;font-size:.82rem}
+.pv-btn.small{padding:8px 18px;font-size:.875rem}
 .pv-msg{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:.9rem}
 .pv-msg.err{background:#fdeaea;color:#8a1c1c;border:1px solid #efc2c2}
 .pv-msg.info{background:#eef3ff;color:#163c99;border:1px solid var(--border)}
