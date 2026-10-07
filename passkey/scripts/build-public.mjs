@@ -10,17 +10,17 @@ const block = (name, html) => `<!-- passkey:begin ${name} -->${html}<!-- passkey
 
 const nav = block('nav', '\n          <li><a href="#private-area">나만의 자리</a></li>');
 const banner = block('public-banner', `
-    <p class="zone-banner zone-public" role="note"><span class="zone-dot" aria-hidden="true"></span>여기부터 <strong>공개 영역</strong> — 누구나 볼 수 있는 소개입니다.</p>
+    <p class="zone-banner zone-public" role="note"><span class="zone-dot" aria-hidden="true"></span>여기부터 <strong>공개 영역</strong>: 누구나 볼 수 있는 소개입니다.</p>
     `);
 const area = block('private', `
 
     <section id="private-area" class="zone-section wrap" aria-labelledby="private-title">
-      <p class="zone-banner zone-private" role="note"><span class="zone-dot" aria-hidden="true"></span>여기부터 <strong>비공개 영역</strong> — 패스키로 잠겨 있습니다. 패스키로 들어가기 전에는 내용이 서버에서 내려오지 않습니다.</p>
+      <p class="zone-banner zone-private" role="note"><span class="zone-dot" aria-hidden="true"></span>여기부터 <strong>비공개 영역</strong>: 패스키로 잠겨 있습니다. 패스키로 들어가기 전에는 내용이 서버에서 내려오지 않습니다.</p>
       <h2 id="private-title">나만의 자리</h2>
       <div id="private-view" aria-live="polite"><p class="pv-muted">불러오는 중…</p></div>
     </section>
 `);
-const css = block('css', '\n<link rel="stylesheet" href="passkey.css">\n');
+const css = block('css', '\n<link rel="stylesheet" href="design.css">\n<link rel="stylesheet" href="passkey.css">\n');
 const js = block('js', '\n  <script src="passkey.js" defer></script>\n');
 
 function insertOnce(html, anchor, text, where) {

@@ -1,5 +1,5 @@
 'use strict';
-/* 나만의 자리 — 화면. 비밀번호 입력칸은 없다. 기기(패스키)가 개인키로 서명하고, 서버에는 공개키만 저장된다.
+/* 나만의 자리 · 화면. 비밀번호 입력칸은 없다. 기기(패스키)가 개인키로 서명하고, 서버에는 공개키만 저장된다.
    모든 값은 서버(/api)에서 읽고, 사용자가 넣은 글자는 textContent 로만 표시한다(HTML 해석 없음). */
 (function () {
   const view = document.getElementById('private-view');
@@ -164,7 +164,7 @@
         itemForm),
       h('div', { class: 'pv-card' },
         h('h3', { text: `내 패스키 (${keys.rows.length}개)` }),
-        h('p', { class: 'pv-muted', text: '서버에는 아래 공개키만 저장되어 있습니다(비밀번호가 아니며, 이것만으로는 로그인할 수 없습니다). 개인키는 각 기기·보관 장소에만 있습니다. 하나만 남으면 지울 수 없습니다 — 하나도 없으면 이 자리에 다시 들어올 방법이 없기 때문입니다.' }),
+        h('p', { class: 'pv-muted', text: '서버에는 아래 공개키만 저장되어 있습니다(비밀번호가 아니며, 이것만으로는 로그인할 수 없습니다). 개인키는 각 기기·보관 장소에만 있습니다. 하나만 남으면 지울 수 없습니다: 하나도 없으면 이 자리에 다시 들어올 방법이 없기 때문입니다.' }),
         keys.rows.map((k) => h('div', { class: 'pv-item' },
           h('h4', { text: k.name + (k.is_current ? ' (지금 로그인한 패스키)' : '') }),
           h('p', { class: 'pv-muted', text: `등록 ${fmtKST(k.created_at)} · 마지막 사용 ${fmtKST(k.last_used_at)} · ${k.device_type === 'multiDevice' ? '여러 기기에 동기화됨' : '이 기기에만 있음'}` }),

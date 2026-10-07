@@ -1,6 +1,6 @@
 /* 나만의 자리(패스키) — 1번 소개 페이지의 색 변수(--accent, --dot-public, --dot-private …)를 그대로 쓴다. */
-.zone-banner{display:flex;align-items:center;gap:10px;margin:0;padding:10px 16px;border-radius:12px;font-size:.92rem;border:1px solid var(--border);background:var(--surface)}
-.zone-banner .zone-dot{flex:0 0 auto;width:12px;height:12px;border-radius:50%}
+.zone-banner{display:block;margin:0;padding:10px 18px;border-radius:12px;font-size:.92rem;border:1px solid var(--border);background:var(--surface)}
+.zone-banner .zone-dot{display:inline-block;vertical-align:middle;margin:0 10px 2px 0;width:12px;height:12px;border-radius:50%}
 .zone-public{max-width:var(--maxw);margin:16px auto 0;border-color:var(--dot-public);color:#0d6b49;background:#eefaf4}
 .zone-public .zone-dot{background:var(--dot-public)}
 .zone-private{border:1px dashed var(--dot-private);color:#8a1c1c;background:#fff4f4}

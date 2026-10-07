@@ -6,7 +6,7 @@ import {
   generateAuthenticationOptions, verifyAuthenticationResponse
 } from '@simplewebauthn/server';
 
-const RP_NAME = '전원 — 나만의 자리';
+const RP_NAME = '전원 · 나만의 자리';
 // 패스키는 "이 사이트 주소(rpID)"에 묶인다. 허용한 주소 밖의 요청(Host 위조 등)은 받지 않는다.
 const RP_HOSTS = ['localhost', 'pds-passkey.pds-diary.workers.dev'];
 const ALGS = [-7, -257]; // ES256, RS256 (Windows Hello·Google 비밀번호 관리자가 쓰는 것)

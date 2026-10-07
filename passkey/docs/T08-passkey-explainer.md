@@ -48,7 +48,8 @@
 
 **그 밖에 고친 곳**
 
-- 1번 소개 페이지: [scripts/build-public.mjs](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/scripts/build-public.mjs)가 루트 `index.html` 에 **추가 블록 5개**(메뉴 링크 1, 공개 영역 안내 줄, 비공개 영역 구역, CSS 링크, JS 링크)만 끼워 [public/index.html](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/public/index.html)을 만듭니다. [scripts/check-public.mjs](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/scripts/check-public.mjs)로 추가 블록을 빼면 1번 페이지와 **글자 하나까지 같은 것**을 확인했습니다(1번 공개 내용이 그대로 남아 있음).
+- 1번 소개 페이지: [scripts/build-public.mjs](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/scripts/build-public.mjs)가 루트 `index.html` 에 **추가 블록 5개**(메뉴 링크 1, 공개 영역 안내 줄, 비공개 영역 구역, CSS 링크(디자인 `design.css` 와 비공개 영역용 `passkey.css`), JS 링크)만 끼워 [public/index.html](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/public/index.html)을 만듭니다. [scripts/check-public.mjs](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/scripts/check-public.mjs)로 추가 블록을 빼면 1번 페이지와 **글자 하나까지 같은 것**을 확인했습니다(1번 공개 내용이 그대로 남아 있음).
+- 디자인: 소개 페이지의 색·글자·배치·움직임은 [public/design.css](https://github.com/Won-22/SKT-ALEPH/blob/DESIGNHASH/passkey/public/design.css) 로만 바꿨습니다(1번 HTML 의 글·구조·링크는 그대로이고, 위 "추가만 했다" 확인이 그대로 통과합니다). 강조색은 주황 하나, 라이트·다크 모드와 모바일 화면을 모두 확인했습니다.
 - 공개/비공개 구분: 화면에서 초록 "공개 영역" 안내와 빨간 점선의 "비공개 영역" 구역으로 나뉩니다.
 - 비공개 내용은 페이지 소스에 없습니다. 비공개 항목은 로그인한 뒤 서버가 내려 주는 응답으로만 화면에 그려지고(`textContent` 로만 표시), HTML·JS·CSS 어디에도 항목 제목·내용이 들어 있지 않습니다.
 - DB: [schema.sql](https://github.com/Won-22/SKT-ALEPH/blob/f2be34417fd03715f7de9dd50859e7c5200787dc/passkey/schema.sql) — `accounts`, `passkeys`(공개키만), `challenges`(일회용 질문), `sessions`, `private_items`.
